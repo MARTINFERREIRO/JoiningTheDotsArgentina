@@ -15,11 +15,10 @@ library(lubridate)
 
 ```{r}
 #Cotizaciones
-file_url<-"https://drive.google.com/uc?export=download&id=144nzhMVvP0ovw77ieiwfhH9ig_UTc2vW"
+file_url<-"https://drive.google.com/uc?export=download&id=1HhUbUs2GO_7EUF-7dihX42vVNPLTeNot"
 file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
-read.csv(file_content$local_path, sep = ";")->external_cotizaciones_dolar_2011_2025 
+read.csv(file_content$local_path, sep = ";")->external_cotizaciones_dolar_2011_2025
 file.remove( file_content$local_path)
-
 
 #Contributions
 file_url<-"https://drive.google.com/uc?export=download&id=1-ub0nALos8xDPzK74z-9S7CvywJaa3Oh"
@@ -27,13 +26,7 @@ file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
 read_xlsx(file_content$local_path)->external_contributions_2011_2019
 file.remove( file_content$local_path)
 
-
-file_url<-"https://drive.google.com/uc?export=download&id=1yXHug1EGeI2ZXJZRSexMVMQKvOOwhLDv"
-file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
-read_csv(file_content$local_path)->external_contributions_2019_2025
-file.remove( file_content$local_path)
-
-file_url<-"https://drive.google.com/uc?export=download&id=1FdZmQR0TScYVBADli_YQTTdvFsMZqWCU"
+file_url<-"https://drive.google.com/uc?export=download&id=1_btdx_YNHlnd4sT7giOe7rQZfGVDtolY"
 file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
 read_csv(file_content$local_path)->external_contributions_2019_2025
 file.remove( file_content$local_path)

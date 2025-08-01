@@ -15,6 +15,11 @@ library(lubridate)
 #Load data
 ```{r}
 #Autoridades apn
+file_url<-"https://drive.google.com/uc?export=download&id=1VcDgmUe69TO6Bp9lug203c0lFpYTMVck"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> 
+  mutate(periodo = "2025-07-01")->external_autoridades_apn_julio_2025
+file.remove( file_content$local_path)
 
 file_url<-"https://drive.google.com/uc?export=download&id=1rCdJqWr8p0TT1pZji3t9Doju-wV-FNqR"
 file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
@@ -27,7 +32,6 @@ file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
 read_csv(file_content$local_path) |> 
   mutate(periodo = "2025-04-01")->external_autoridades_apn_abril_2025
 file.remove( file_content$local_path)
-
 
 file_url<-"https://drive.google.com/uc?export=download&id=1obfnNkf17ONAjK6RnFkWch6hWJnbHyq_"
 file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
@@ -72,17 +76,10 @@ file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
 read_xlsx(file_content$local_path, guess_max = 5000)->external_directorios_2000_2024
 file.remove( file_content$local_path)
 
-#Legislatura CABA
-file_url<-"https://drive.google.com/uc?export=download&id=1RQDyQxU-1DYKxVTc7nXzu-NNnBzonisA"
-file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
-read_xlsx(file_content$local_path, guess_max = 5000)->external_legisladores_caba_2021_2027
-file.remove( file_content$local_path)
-
 file_url<-"https://drive.google.com/uc?export=download&id=1nQy4CDkvA_Cb40ag3rLlf8wywF-jeFTH"
 file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
 read_xlsx(file_content$local_path, guess_max = 5000)->external_legisladores_2021_2029
 file.remove( file_content$local_path)
-
 ```
 
 
@@ -103,7 +100,8 @@ remove_accents <- function(text) {
 #Clean data
 ```{r}
 #Ejecutivo nacional
-external_autoridades_apn_junio_2025 |> 
+external_autoridades_apn_julio_2025 |> 
+  bind_rows(external_autoridades_apn_junio_2025) |>
   bind_rows(external_autoridades_apn_abril_2025) |>
   bind_rows(external_autoridades_apn_febrero_2025) |> 
   bind_rows(external_autoridades_apn_diciembre_2024)|> 
@@ -117,18 +115,20 @@ external_autoridades_apn_junio_2025 |>
   filter(!is.na(dni_pep)) |> 
   distinct(dni_pep, .keep_all = TRUE) |> 
   #We want a field indicating when they first appeared in our data base
+  left_join(external_autoridades_apn_junio_2025 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>
   left_join(external_autoridades_apn_abril_2025 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>  
   left_join(external_autoridades_apn_febrero_2025 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>  
   left_join(external_autoridades_apn_diciembre_2024 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>  
   left_join(external_autoridades_apn_octubre_2023 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |> 
   mutate(primer_registro_pep = case_when(
+    !is.na(periodo)~periodo,
     !is.na(periodo.y.y)~periodo.y.y,
     !is.na(periodo.x.x) ~ periodo.x.x,
     !is.na(periodo.y) ~ periodo.y,
     !is.na(periodo.x) ~ periodo.x,
     TRUE ~ ultimo_registro_pep
   )) |> 
-  select(-periodo.x,-periodo.y,-periodo.y.y,-periodo.x.x) |> 
+  select(-periodo,-periodo.x,-periodo.y,-periodo.y.y,-periodo.x.x) |> 
   mutate(ultimo_registro_pep = as.Date(ultimo_registro_pep)) |> 
   mutate(primer_registro_pep = as.Date(primer_registro_pep)) |> 
   mutate(ingreso_pep = NA, egreso_pep = NA) |> 
@@ -300,8 +300,8 @@ bind_rows(interim_autoridades_apn, interim_gobernadores_2019_2027, interim_autor
 
 #Save
 ```{r}
-write_csv(processed_peps_2019_2025,"../../../data/processed/peps/processed_peps_2019_2025.csv")
-drive_update(as_id("1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"),"../../../data/processed/peps/processed_peps_2019_2025.csv")
-file.remove("../../../data/processed/peps/processed_peps_2019_2025.csv")
+write_csv(processed_peps_2019_2025,"./processed_peps_2019_2025.csv")
+drive_update(as_id("1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"),"./processed_peps_2019_2025.csv")
+file.remove("./processed_peps_2019_2025.csv")
 ```
 

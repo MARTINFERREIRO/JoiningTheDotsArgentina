@@ -173,10 +173,9 @@ interim_contributions_2011_2019 |>
 
 #Saving
 ```{r}
-write_csv(processed_contributions_2011_2025,"../../../data/processed/contributions/processed_contributions_2011_2025.csv")
-drive_update(as_id("1cK0lrE-MzjF1dZav_-8e9Q11Q8OHLoSb"),"../../../data/processed/contributions/processed_contributions_2011_2025.csv")
-file.remove("../../../data/processed/contributions/processed_contributions_2011_2025.csv")
-
+write_csv(processed_contributions_2011_2025,"./processed_contributions_2011_2025.csv")
+drive_update(as_id("1cK0lrE-MzjF1dZav_-8e9Q11Q8OHLoSb"),"./processed_contributions_2011_2025.csv")
+file.remove("./processed_contributions_2011_2025.csv")
 
 ```
 

@@ -1,0 +1,112 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+#Load data
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1J3gnSZif6PaIZ8ZrD1Jcpnq3daqmfRhC"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_diciembre_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1EOTxufu2YWIJmfcEvGJrn5lgedN3M0mr"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_noviembre_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=19Phn5Iq0c46usL7h7qBoxABDqldcxH5Y"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_octubre_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=13ttvMbtOOnYzbuvec0h0gVyFYFysFiX3"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_septiembre_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1oPDEYFvXJ6XvanJHeakaTu3KOhKuk0kc"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_agosto_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1Gm8lEdeTky2Ycxusu-WCeBj9W-b1R-3j"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_julio_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=16F-DTswSg2ECuEz_cLayftkV5YRzRjPB"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_junio_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=105Oe3b-Sm5IGAsFYmcxmt7Ie4IxEHmDM"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_mayo_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1W-QuUtkvp8y7wL1sXvUA_Y8E9pPQz1Vy"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_abril_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1pbXHuTqQKpCfcvS_p9Q-qksw5xpYXqbQ"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_marzo_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1M8euAawDimYqCq8D9HDYEPJoA_onHb6K"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_febrero_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1wEzqotPG5u0tuO--aZ_oX5icv6AcFYK_"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_enero_2021
+file.remove( file_content$local_path)
+```
+
+#Clean
+```{r}
+bind_rows(external_beneficiaries_alimentar_diciembre_2021, external_beneficiaries_alimentar_noviembre_2021, external_beneficiaries_alimentar_octubre_2021, external_beneficiaries_alimentar_septiembre_2021, external_beneficiaries_alimentar_agosto_2021,
+          external_beneficiaries_alimentar_julio_2021, external_beneficiaries_alimentar_junio_2021, external_beneficiaries_alimentar_mayo_2021,
+          external_beneficiaries_alimentar_abril_2021, external_beneficiaries_alimentar_marzo_2021, external_beneficiaries_alimentar_febrero_2021,
+          external_beneficiaries_alimentar_enero_2021) |> 
+  mutate(PERIODO = paste0(PERIODO, "-28")) |> 
+  mutate(PERIODO = str_replace_all(PERIODO, "^(\\d{4})", "\\1-")) |> 
+  mutate(PERIODO = as.Date(PERIODO))->auxiliar_2021
+
+
+gc()
+
+auxiliar_2021 |> 
+  arrange(PERIODO) |> 
+  distinct(DOCUMENTO,  .keep_all = TRUE) |> 
+  select( DOCUMENTO,PERIODO)->primeros_registros
+
+gc()
+
+auxiliar_2021 |> 
+  distinct(DOCUMENTO,  .keep_all = TRUE) |> 
+  rename(ultimo_registro_plan = PERIODO) |> 
+  left_join(primeros_registros,by = "DOCUMENTO") |> 
+  rename(primer_registro_plan = PERIODO, dni_beneficiario = DOCUMENTO, nombre_beneficiario = APELLIDO_NOMBRE) |> 
+  relocate(dni_beneficiario, nombre_beneficiario, primer_registro_plan, ultimo_registro_plan)->interim_beneficiaries_alimentar_2021
+  
+```
+
+#Save
+```{r}
+write.csv(interim_beneficiaries_alimentar_2021,"./interim_beneficiaries_alimentar_2021.csv")
+drive_update(as_id("1lv2AnBs9QNERdEPvcZqaD6rsNp6KFGG3"),"./interim_beneficiaries_alimentar_2021.csv")
+file.remove("./interim_beneficiaries_alimentar_2021.csv")
+```
+

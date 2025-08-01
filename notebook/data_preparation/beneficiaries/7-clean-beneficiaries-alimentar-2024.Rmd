@@ -1,0 +1,101 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+#Load data
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1aGFHBuCOBm-2NEL1bvXIZy4iYltx0T4z"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_octubre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1-S_IXL99hJY9I-IOzmFEdXoeeDP3J8yO"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_septiembre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=18eayusW9FxgxtWhi53RTMrWpo3OrqEXP"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_agosto_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=15P2ExmdN6dLrOE0aiNehjW8XtI5r5Hex"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_julio_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1UZQUbZYKQd06Cz6z3iulxG8HEh2N3F-_"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_junio_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1xRCYmxgeXNPfxDWBRAy90B_pjqvxv4s_"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_mayo_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1dlE68KWoGD1nxCGZZWugPhyOY9y-zs6E"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_abril_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=126GSsV-CiTnl033N04LzOXynMoqmLIiM"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_marzo_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1a_xhxZK1GM7cflcdwTsKMpJg8SlMhHRC"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_febrero_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1zfzhE7gc6EDrA3IvbWH__bdflZ5bMkx2"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> select(DOCUMENTO, APELLIDO_NOMBRE, PERIODO)->external_beneficiaries_alimentar_enero_2024
+file.remove( file_content$local_path)
+```
+
+#Clean
+```{r}
+bind_rows(external_beneficiaries_alimentar_octubre_2024, external_beneficiaries_alimentar_septiembre_2024, external_beneficiaries_alimentar_agosto_2024,
+          external_beneficiaries_alimentar_julio_2024, external_beneficiaries_alimentar_junio_2024, external_beneficiaries_alimentar_mayo_2024,
+          external_beneficiaries_alimentar_abril_2024, external_beneficiaries_alimentar_marzo_2024, external_beneficiaries_alimentar_febrero_2024,
+          external_beneficiaries_alimentar_enero_2024) |> 
+  mutate(PERIODO =paste0(PERIODO,"-28")) |> 
+  mutate(PERIODO =str_replace_all(PERIODO,"^(\\d{4})","\\1-")) |> 
+  mutate(PERIODO=as.Date(PERIODO))->auxiliar_2024
+
+gc()
+
+auxiliar_2024 |> 
+  arrange(PERIODO) |> 
+  distinct(DOCUMENTO,  .keep_all = TRUE) |> 
+  select( DOCUMENTO,PERIODO)->primeros_registros
+
+gc()
+
+auxiliar_2024 |> 
+  distinct(DOCUMENTO,  .keep_all = TRUE) |> 
+  rename(ultimo_registro_plan = PERIODO) |> 
+  left_join(primeros_registros,by = "DOCUMENTO") |> 
+  rename(primer_registro_plan = PERIODO, dni_beneficiario = DOCUMENTO, nombre_beneficiario = APELLIDO_NOMBRE) |> 
+  relocate(dni_beneficiario, nombre_beneficiario, primer_registro_plan, ultimo_registro_plan)->interim_beneficiaries_alimentar_2024
+  
+```
+
+#Save
+```{r}
+write.csv(interim_beneficiaries_alimentar_2024,"./interim_beneficiaries_alimentar_20245.csv")
+drive_update(as_id("1jKxj_n6jTIV7OP7EKgx4MOyOWXL7qSUK"),"./interim_beneficiaries_alimentar_2024.csv")
+file.remove("./interim_beneficiaries_alimentar_20245.csv")
+```
+

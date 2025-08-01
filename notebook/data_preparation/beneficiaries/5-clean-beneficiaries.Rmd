@@ -1,0 +1,301 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+#Load data
+```{r}
+#Progresar
+file_url<-"https://drive.google.com/uc?export=download&id=1cWlMGTWswB2TU_cX_rJ23Vwl4Dp603GA"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";")->external_beneficiaries_progresar_2018_2024
+file.remove( file_content$local_path)
+
+#Auh
+#2022
+file_url<-"https://drive.google.com/uc?export=download&id=1kayGp2WdygasH0vmzMPFGFQGN7yTHaUu"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";", header = FALSE)->external_beneficiaries_auh_septiembre_2022
+file.remove( file_content$local_path)
+colnames(external_beneficiaries_auh_septiembre_2022)<-c("cuit_beneficiario","periodo","monto","nombre_beneficiario","tipo_documento_beneficiario","dni_beneficiario","fecha_nacimiento_beneficiario","codigo_provincia","provincia_beneficiario")
+
+#2023
+file_url<-"https://drive.google.com/uc?export=download&id=1NCaW_mcjMln9z91NEK9LtI0Hx7yOuCBF"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";", header = FALSE)->external_beneficiaries_auh_septiembre_2023
+file.remove( file_content$local_path)
+colnames(external_beneficiaries_auh_septiembre_2023)<-c("cuit_beneficiario","periodo","monto","nombre_beneficiario","tipo_documento_beneficiario","dni_beneficiario","fecha_nacimiento_beneficiario","codigo_provincia","provincia_beneficiario")
+
+#2024
+file_url<-"https://drive.google.com/uc?export=download&id=1TulQU5Jj_CX-E4mlYsKN_WxyUxH1rWor"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";") |> 
+  rename(cuit_beneficiario = CUIL, nombre_beneficiario = APELLIDO_NOMBRE, tipo_documento_beneficiario = TIPO_DOCUMENTO,
+         dni_beneficiario = NRO_DOCUMENTO, fecha_nacimiento_beneficiario = FECHA_NACIMIENTO, codigo_provincia = CODIGO_PROVINCIA, 
+         provincia_beneficiario = DESCRIPCION_PROVINCIA, periodo = PERIODO_LIQUIDACION, monto = SUMA_LIQUIDACION)->external_beneficiaries_auh_septiembre_2024
+file.remove( file_content$local_path)
+
+#Marzos 2021-2024
+file_url<-"https://drive.google.com/uc?export=download&id=1t1knGdzjUG082uxqRgfmp6E4m1-4OBrD"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ",", header = TRUE) |> 
+  rename(cuit_beneficiario = CUIL, nombre_beneficiario = APE_NOM,
+         dni_beneficiario = DOC_NRO, fecha_nacimiento_beneficiario = F_NACI,
+         codigo_provincia = COD_PROV, periodo = PE_LIQUIDACION,
+        provincia_beneficiario = DESC_PROVINCIA,  monto = SUMA_LIQUI)->external_beneficiaries_auh_marzo_2021_2022_2023_2024_septiembre_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1jDJpjN25iSP8uMzgcKGEcvfXMzuDWmo2"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ",", header = TRUE) |> 
+  rename(cuit_beneficiario = CUIL, nombre_beneficiario = APE_NOM,
+         dni_beneficiario = DOC_NRO, fecha_nacimiento_beneficiario = F_NACI,
+         codigo_provincia = C_PROVINCIA, periodo = PE_LIQUIDACION,
+        provincia_beneficiario = D_PROVINCIA)->external_beneficiaries_auh_marzo_2025
+file.remove( file_content$local_path)
+external_beneficiaries_auh_marzo_2025 |> select(-length(external_beneficiaries_auh_marzo_2025))->external_beneficiaries_auh_marzo_2025
+```
+
+```{r}
+#Acompanar
+
+file_url<-"https://drive.google.com/uc?export=download&id=1LQfEWJtg3ZMgaeFXrLcAJT6V2LZIRfHH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) ->external_beneficiaries_acompanar_noviembre_2024_diciembre_2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=10c2T9UaPlNRnKHzo356HF7bkm9Cjsr7H"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, skip = 1)->external_beneficiaries_acompanar_2024
+file.remove( file_content$local_path)
+
+#Mi pieza dni
+file_url<-"https://drive.google.com/uc?export=download&id=110ANI1cdZiDPwoFU3eZGaMX3zavZ1ogU"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_beneficiaries_mi_pieza_dni
+file.remove( file_content$local_path)
+```
+
+#Functions
+```{r}
+replace_accented_vowels <- function(input_string) {
+  input_string |>
+    str_replace("Á", "A") |>
+    str_replace("É", "E") |>
+    str_replace("Í", "I") |>
+    str_replace("Ó", "O") |>
+    str_replace("Ú", "U")
+}
+```
+
+#Clean
+
+```{r}
+external_beneficiaries_acompanar_noviembre_2024_diciembre_2025 |> 
+  rename(cuit_beneficiario = CUIT, apellido=APELLIDO, nombre=NOMBRES, dni_beneficiario = DNI, fecha_nacimiento_beneficiario = `FECHA NACIMIENTO`,
+         provincia_beneficiario = PROVINCIA, alta_plan = `MES ALTA`, baja_plan = `MES BAJA`,
+         diciembre_2024 = '45627', enero_2025 = '45658',
+         febrero_2025 = '45689', marzo_2025 = `45717`,
+         abril_2025 = '45748', mayo_2025 =`45778`,
+         monto_recibido_plan = `SUMA TOTAL EN EL PERIODO CONSULTADO`) |> 
+  mutate(nombre_beneficiario = paste(nombre, apellido)) |> 
+  mutate(ultimo_registro_plan = case_when(
+  mayo_2025 > 0 ~ as.Date("2025-05-31"),
+  abril_2025 > 0 ~ as.Date("2025-04-30"),
+  marzo_2025 > 0 ~ as.Date("2025-03-31"),
+  febrero_2025 > 0 ~ as.Date("2025-02-28"),
+  enero_2025 > 0 ~ as.Date("2025-01-31"),
+  TRUE > 0 ~ as.Date("2024-12-31")
+)) |> 
+  select(-OBSERVACIONES,-nombre,-apellido, -mayo_2025,-abril_2025,-marzo_2025,-febrero_2025,-enero_2025,-diciembre_2024) |> 
+  mutate(fecha_nacimiento_beneficiario=dmy(fecha_nacimiento_beneficiario), alta_plan=as.character(alta_plan))->interim_beneficiaries_acompanar_noviembre_2024_diciembre_2025
+  
+external_beneficiaries_acompanar_2024 |> 
+  rename(cuit_beneficiario = CUIT, dni_beneficiario = DNI, fecha_nacimiento_beneficiario = fechaNac,
+         provincia_beneficiario = provincia, alta_plan = MesAlta, baja_plan = MesBaja,
+         abril_2024 = '45383', mayo_2024 = '45413',
+         junio_2024 = '45444', julio_2024 = `45474`,
+         agosto_2024 = '45505', septiembre_2024 =`45536`,
+         octubre_2024 = '45566', noviembre_2024 = '45597', monto_recibido_plan = `Total Liquidado`) |> 
+  mutate(ultimo_registro_plan = case_when(
+  noviembre_2024 > 0 ~ as.Date("2024-11-30"),
+  octubre_2024 > 0 ~ as.Date("2024-10-31"),
+  septiembre_2024 > 0 ~ as.Date("2024-09-30"),
+  agosto_2024 > 0 ~ as.Date("2024-08-31"),
+  julio_2024 > 0 ~ as.Date("2024-07-31"),
+  junio_2024 > 0 ~ as.Date("2024-06-30"),
+  mayo_2024 > 0 ~ as.Date("2024-05-31"),
+  TRUE > 0 ~ as.Date("2024-04-30")
+)) |> 
+  mutate(nombre_beneficiario = paste(nombres, apellidos)) |> 
+   select(-nombres,-apellidos,-abril_2024, -mayo_2024, -junio_2024, -julio_2024, -agosto_2024, -septiembre_2024, -octubre_2024, -noviembre_2024)->interim_beneficiaries_acompanar_2024
+```
+
+```{r}
+#Acompanar
+ bind_rows(interim_beneficiaries_acompanar_noviembre_2024_diciembre_2025, interim_beneficiaries_acompanar_2024) |> 
+  distinct(dni_beneficiario,.keep_all = TRUE) |> 
+  #Colocamos como monto recibido el del ultimo mes
+  mutate(monto_recibido_plan = 78000) |> 
+  
+  mutate(fecha_nacimiento_beneficiario = as.Date(fecha_nacimiento_beneficiario)) |> 
+  mutate(alta_plan = paste0(alta_plan, "-01")) |> 
+  mutate(alta_plan = str_replace_all(alta_plan, "^(\\d{4})", "\\1-")) |> 
+  mutate(alta_plan = as.Date(alta_plan)) |> 
+  mutate(baja_plan = paste0(baja_plan, "-01")) |> 
+  mutate(baja_plan = str_replace_all(baja_plan, "^(\\d{4})", "\\1-")) |> 
+  mutate(baja_plan =case_when(
+    str_detect(baja_plan,"NA")~ NA,
+    TRUE ~ baja_plan
+  ) ) |> 
+  mutate(baja_plan = as.Date(baja_plan)) |> 
+  mutate(primer_registro_plan = alta_plan) |> 
+  select(dni_beneficiario, cuit_beneficiario, nombre_beneficiario,fecha_nacimiento_beneficiario, provincia_beneficiario,  alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan ) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels)|> 
+  mutate(programa ="ACOMPANAR")->processed_beneficiaries_acompanar_2024_2025
+```
+
+```{r}
+#Mi pieza
+external_beneficiaries_mi_pieza_dni |> 
+  mutate(nombre_beneficiario = paste(nombre, apellido)) |> 
+  rename(dni_beneficiario = dni, linea_plan = tipo_obra, monto_recibido_plan = monto, provincia_beneficiario = provincia, fecha_nacimiento_beneficiario = `fecha de nacimiento`) |> 
+  select(dni_beneficiario, nombre_beneficiario, fecha_nacimiento_beneficiario, provincia_beneficiario, monto_recibido_plan, linea_plan) |> 
+  mutate(alta_plan = NA, baja_plan = NA, primer_registro_plan = NA, ultimo_registro_plan = NA) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+  select(-monto_recibido_plan) |> 
+  mutate(programa ="MI PIEZA")->processed_beneficiaries_mi_pieza
+```
+
+```{r}
+#Progresar
+external_beneficiaries_progresar_2018_2024 |> 
+  rename(periodo = AÑO_BECA, cuit_beneficiario = CUIL, dni_beneficiario = NRO_DNI, nombre_beneficiario = APELLIDO_Y_NOMBRE, 
+         fecha_nacimiento_beneficiario = FECHA_NAC, provincia_beneficiario = JURISDICCION, linea_plan = LINEA_BECA,
+         monto_recibido_plan = MONTO_LIQUIDADO) |> 
+  mutate(fecha_nacimiento_beneficiario =str_remove_all(fecha_nacimiento_beneficiario,"\\d:.+")) |> 
+  mutate(fecha_nacimiento_beneficiario = dmy(fecha_nacimiento_beneficiario)) |> 
+  mutate(alta_plan = NA,
+         baja_plan = NA) |> 
+  arrange(desc(periodo)) |> 
+  mutate(ultimo_registro_plan = as.character(periodo)) |> 
+  mutate(ultimo_registro_plan = as.Date( paste0(ultimo_registro_plan,"-12-31")) ) |> 
+  distinct(dni_beneficiario, .keep_all = TRUE) |> 
+  select(-periodo)->interim_beneficiarios_progresar
+
+external_beneficiaries_progresar_2018_2024 |> 
+  rename(periodo = AÑO_BECA, cuit_beneficiario = CUIL, dni = NRO_DNI) |> 
+  select( dni, periodo) |> 
+  arrange(periodo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  rename(primer_registro_plan = periodo) |> 
+  mutate(primer_registro_plan = as.Date( paste0(primer_registro_plan,"-01-31")) )->auxiliar_primeros_periodos
+
+
+interim_beneficiarios_progresar |> 
+  left_join(auxiliar_primeros_periodos, by = c("dni_beneficiario"="dni")) |> 
+  select(-monto_recibido_plan) |> 
+   relocate(dni_beneficiario, cuit_beneficiario, nombre_beneficiario, fecha_nacimiento_beneficiario, provincia_beneficiario,linea_plan, alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+  mutate(programa = "PROGRESAR")->processed_beneficiaries_progresar_2018_2024
+  
+```
+
+```{r}
+#AUH
+external_beneficiaries_auh_marzo_2021_2022_2023_2024_septiembre_2021 |> 
+  filter(periodo =="202103")->external_beneficiaries_auh_marzo_2021
+
+external_beneficiaries_auh_marzo_2021_2022_2023_2024_septiembre_2021 |> 
+  filter(periodo =="202109")->external_beneficiaries_auh_septiembre_2021
+
+external_beneficiaries_auh_marzo_2021_2022_2023_2024_septiembre_2021 |> 
+  filter(periodo =="202203")->external_beneficiaries_auh_marzo_2022
+
+external_beneficiaries_auh_marzo_2021_2022_2023_2024_septiembre_2021 |> 
+  filter(periodo =="202303")->external_beneficiaries_auh_marzo_2023
+
+external_beneficiaries_auh_marzo_2021_2022_2023_2024_septiembre_2021 |> 
+  filter(periodo =="202403")->external_beneficiaries_auh_marzo_2024
+
+bind_rows(external_beneficiaries_auh_marzo_2025, external_beneficiaries_auh_septiembre_2024, external_beneficiaries_auh_marzo_2024,
+          external_beneficiaries_auh_septiembre_2023,external_beneficiaries_auh_marzo_2023,
+          external_beneficiaries_auh_septiembre_2022, external_beneficiaries_auh_marzo_2022,
+          external_beneficiaries_auh_septiembre_2021, external_beneficiaries_auh_marzo_2021) |> 
+  distinct(dni_beneficiario, .keep_all = TRUE) |> 
+  select(-codigo_provincia,-tipo_documento_beneficiario) |> 
+  mutate(dni_beneficiario = str_remove_all(cuit_beneficiario,"^..|.$")) |> 
+  mutate(dni_beneficiario = str_remove_all(dni_beneficiario,"^0")) |> 
+  mutate(fecha_nacimiento_beneficiario = as.Date(fecha_nacimiento_beneficiario)) |> 
+  rename(ultimo_registro_plan = periodo, monto_recibido_plan =monto) |> 
+  mutate(alta_plan = NA, baja_plan = NA) |> 
+   left_join(external_beneficiaries_auh_septiembre_2024 |> distinct(cuit_beneficiario, periodo1=periodo), by = "cuit_beneficiario") |> 
+  left_join(external_beneficiaries_auh_marzo_2024 |> distinct(cuit_beneficiario, periodo2=periodo), by = "cuit_beneficiario") |> 
+  left_join(external_beneficiaries_auh_septiembre_2023 |> distinct(cuit_beneficiario, periodo3=periodo), by = "cuit_beneficiario") |> 
+  left_join(external_beneficiaries_auh_marzo_2023 |> distinct(cuit_beneficiario, periodo4=periodo), by = "cuit_beneficiario") |> 
+  left_join(external_beneficiaries_auh_septiembre_2022 |> distinct(cuit_beneficiario, periodo5=periodo), by = "cuit_beneficiario") |> 
+    left_join(external_beneficiaries_auh_marzo_2022 |> distinct(cuit_beneficiario, periodo6=periodo), by = "cuit_beneficiario") |> 
+  left_join(external_beneficiaries_auh_septiembre_2021 |> distinct(cuit_beneficiario, periodo7=periodo), by = "cuit_beneficiario") |> 
+    left_join(external_beneficiaries_auh_marzo_2021|> distinct(cuit_beneficiario, periodo8=periodo), by = "cuit_beneficiario") |> 
+  mutate(primer_registro_plan = case_when(
+    !is.na(periodo8)~periodo8,
+    !is.na(periodo7)~periodo7,
+    !is.na(periodo6)~periodo6,
+    !is.na(periodo5)~periodo5,
+    !is.na(periodo4)~periodo4,
+    !is.na(periodo3)~periodo3,
+    !is.na(periodo2)~periodo2,
+    !is.na(periodo1)~periodo1,
+    TRUE ~ultimo_registro_plan
+  ))  |> 
+  select(-periodo8, -periodo7,-periodo6,-periodo5,-periodo4,-periodo3,-periodo2,-periodo1) |> 
+  relocate(dni_beneficiario, cuit_beneficiario, nombre_beneficiario, fecha_nacimiento_beneficiario, provincia_beneficiario, monto_recibido_plan, alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan) |> 
+  mutate(primer_registro_plan= paste0(primer_registro_plan,"-01")) |> 
+  mutate(primer_registro_plan= str_replace_all(primer_registro_plan,"^(\\d{4})","\\1-")) |> 
+  mutate(primer_registro_plan = as.Date(primer_registro_plan)) |> 
+  mutate(ultimo_registro_plan = paste0(ultimo_registro_plan, "-01")) |> 
+  mutate(ultimo_registro_plan = str_replace_all(ultimo_registro_plan, "^(\\d{4})", "\\1-")) |> 
+  mutate(ultimo_registro_plan = as.Date(ultimo_registro_plan)) |> 
+   select(-monto_recibido_plan) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+   mutate(programa = "AUH")->processed_beneficiaries_auh_2021_2025
+```
+
+
+
+
+#Saving
+```{r}
+write.csv(processed_beneficiaries_acompanar_2024_2025,"./processed_beneficiaries_acompanar_2024_2025.csv")
+drive_update(as_id("1GHGHjsaRn430Ngs73YdMSfUFwbR89wFH"),"./processed_beneficiaries_acompanar_2024_2025.csv")
+file.remove("./processed_beneficiaries_acompanar_2024_2025.csv")
+
+write.csv(processed_beneficiaries_auh_2021_2025,"./processed_beneficiaries_auh_2021_2025.csv")
+drive_update(as_id("1dLcpxGP5tJH4sTaguHrYc_PodjSK-nsB"),"./processed_beneficiaries_auh_2021_2025.csv")
+file.remove("./processed_beneficiaries_auh_2021_2025.csv")
+
+write.csv(processed_beneficiaries_progresar_2018_2024,"./processed_beneficiaries_progresar_2018_2024.csv")
+drive_update(as_id("1f6fyk7j6SLnQXSNThFtniEIMqefrJhti"),"./processed_beneficiaries_progresar_2018_2024.csv")
+file.remove("./processed_beneficiaries_progresar_2018_2024.csv")
+
+write.csv(processed_beneficiaries_mi_pieza,"./processed_beneficiaries_mi_pieza.csv")
+drive_update(as_id("1nCF7QzJdR3JJwS2GezH_s1acdMwuhKDk"),"./processed_beneficiaries_mi_pieza.csv")
+file.remove("./processed_beneficiaries_mi_pieza.csv")
+
+
+
+```
+
+

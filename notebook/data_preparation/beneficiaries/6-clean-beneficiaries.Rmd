@@ -1,0 +1,175 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+library(pdftools)
+```
+
+#Load data
+```{r}
+#Potenciar
+file_url<-"https://drive.google.com/uc?export=download&id=1aToGUKRW3O66NCu0ayL2WzsZr3gGTud9"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep = ";")->external_beneficiaries_potenciar_2019_2023
+file.remove( file_content$local_path)
+
+
+```
+
+```{r}
+#Procrear
+file_url<-"https://drive.google.com/uc?export=download&id=16SP-fGHxXEMHVC98DIS4iIoqpQNDxTc8"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+pdf_text(file_content$local_path)->external_beneficiaries_procrear_2019_2023
+file.remove( file_content$local_path)
+
+```
+
+#Functions
+```{r}
+replace_accented_vowels <- function(input_string) {
+  input_string |>
+    str_replace("Á", "A") |>
+    str_replace("É", "E") |>
+    str_replace("Í", "I") |>
+    str_replace("Ó", "O") |>
+    str_replace("Ú", "U")
+}
+
+```
+
+#Clean
+
+#Procrear
+```{r}
+external_beneficiaries_procrear_2019_2023->raw_text_pdf
+listado_texto_paginas<-list()
+
+for (i in 1:length(raw_text_pdf)) {
+  
+  texto_pagina<-raw_text_pdf[i]
+  filas_texto_pagina<-scan(textConnection(texto_pagina), 
+           what="character", sep = "\n")
+  
+  listado_texto_paginas[[i]]<-filas_texto_pagina
+  
+}
+
+
+```
+
+```{r}
+auxiliar<-list("NA")
+for (j in 1:length(listado_texto_paginas)) {
+  
+  
+  contenido_pagina_iteracion<-listado_texto_paginas[[j]]
+  auxiliar<-c(auxiliar, contenido_pagina_iteracion)
+
+  
+}
+auxiliar |> unlist()->filas_pdf
+```
+
+```{r}
+pattern_provincias <- "BUENOS AIRES|CDAD AUTONOMA|CATAMARCA|CHACO|CHUBUT|CORDOBA|CORRIENTES|ENTRE RIOS|FORMOSA|JUJUY|LA PAMPA|LA RIOJA|MENDOZA|MISIONES|NEUQUEN|RIO NEGRO|SALTA|SAN JUAN|SAN LUIS|SANTA CRUZ|SANTA FE|SANTIAGO DEL ESTERO|TIERRA DEL FUEGO|TUCUMAN"
+
+genero<-vector()
+fecha_nacimiento<-vector()
+cuit<-vector()
+nombre<-vector()
+provincia<-vector()
+fecha_sorteo<-vector()
+
+for (n in 1:length(filas_pdf)) {
+  genero[n]<-str_extract(filas_pdf[n],"^(M|F)(?=\\s)")
+  fecha_nacimiento[n]<-str_extract(filas_pdf[n],"(\\d\\d|\\d)/(\\d\\d|\\d)/\\d{4}")
+  cuit[n]<-str_extract(filas_pdf[n],"(\\d{11}|\\d{10})(?=\\s)")
+  fecha_sorteo[n]<-str_extract(filas_pdf[n],"\\d{4}-\\d{2}-\\d{2}")
+  #provincia[n]<-str_extract(filas_pdf[n],pattern_provincias)
+  nombre[n]<-str_extract(filas_pdf[n],"(?<=\\d{11}|\\d{10})\\s+.+?\\s{2}|PALAVECINO NAZARENA ELIZABETH|SANCHEZ MAIDANA ERNESTO ABEL|DUARTE BIANCHI GABRIEL ALEJANDRO|GOMEZ DE PAZ FERNANDO DANIEL")
+}
+cuits_identificados<-cuit[!is.na(cuit)]
+generos_identificados<-genero[!is.na(genero)]
+nacimientos_identificados<-fecha_nacimiento[!is.na(fecha_nacimiento)]
+nombres_identificados<-nombre[!is.na(nombre)]
+sorteos_identificados<-fecha_sorteo[!is.na(fecha_sorteo)]
+```
+
+```{r}
+tibble(cuit_beneficiario = cuits_identificados, nombre_beneficiario = nombres_identificados,
+       fecha_nacimiento_beneficiario = nacimientos_identificados, alta_plan = sorteos_identificados) |> 
+  mutate(fecha_nacimiento_beneficiario = dmy(fecha_nacimiento_beneficiario),
+         alta_plan = as.Date(alta_plan)) |> 
+  mutate(nombre_beneficiario = str_squish(nombre_beneficiario)) |> 
+  mutate(nombre_beneficiario = str_remove_all(nombre_beneficiario,"(?<=[A-Z])\\s[a-z].+|(?<=[A-Z]{2})[a-z].+|(?<=[A-Z]{2})\\s[A-Z][a-z].+")) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels) |>
+  mutate(baja_plan = alta_plan) |> 
+  mutate(primer_registro_plan = alta_plan,
+         ultimo_registro_plan = primer_registro_plan+30) |> 
+  mutate(dni_beneficiario = str_remove_all(cuit_beneficiario,"^..|.$")) |> 
+  mutate(dni_beneficiario = str_remove_all(dni_beneficiario,"^0")) |> 
+  relocate(dni_beneficiario) |> 
+  mutate(programa = "PROCREAR")->processed_beneficiaries_procrear_2019_2023
+```
+
+#Potenciar
+```{r}
+external_beneficiaries_potenciar_2019_2023 |> 
+  mutate(nombre_beneficiario = paste(Nombres, Apellidos)) |> 
+  rename(dni_beneficiario = DNI,fecha_nacimiento_beneficiario = FECHA.NAC,
+         provincia_beneficiario = Provincia, mes_alta = MES.ALTA, mes_baja = MES.BAJA) |> 
+  select(-Apellidos, -Nombres) |> 
+  mutate(fecha_nacimiento_beneficiario = str_remove_all(fecha_nacimiento_beneficiario,"\\s.+")) |> 
+  mutate(fecha_nacimiento_beneficiario = dmy(fecha_nacimiento_beneficiario)) |> 
+mutate(alta_plan = paste0(str_extract(mes_alta,"^\\d{4}"),"-",str_extract(mes_alta,"\\d{2}$"),"-01")) |> 
+  
+  #Ojo: habia algunos que no tenian fecha de alta exacta
+  #pero decian que era anterior a marzo de 2020
+  #nos quedamos con marzo 2020 como fecha
+  mutate(alta_plan = case_when(
+    str_detect(mes_alta,"^ANTERIOR A") ~ "2020-03-01",
+    is.na(mes_alta)~ NA,
+    TRUE ~ alta_plan
+  ) ) |> 
+  mutate(alta_plan = as.Date(alta_plan)) |> 
+  mutate(baja_plan =paste0(str_extract(mes_baja,"^\\d{4}"),"-",str_extract(mes_baja,"\\d{2}$"),"-01")  ) |> 
+    mutate(baja_plan = case_when(
+    is.na(mes_baja)~ NA,
+    TRUE ~ baja_plan
+  ) ) |> 
+   mutate(baja_plan = as.Date(baja_plan)) |> 
+  select(-mes_baja, -mes_alta) |> 
+  mutate(primer_registro_plan = alta_plan,
+         ultimo_registro_plan = baja_plan) |> 
+  mutate(ultimo_registro_plan = case_when(
+    is.na(ultimo_registro_plan)~ as.Date("2023-12-31"),
+    TRUE ~ ultimo_registro_plan
+  )) |> 
+  relocate(dni_beneficiario,nombre_beneficiario, fecha_nacimiento_beneficiario, provincia_beneficiario) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+  mutate(programa = "POTENCIAR")->processed_beneficiaries_potenciar_2019_2023
+```
+
+#Save
+```{r}
+write.csv(processed_beneficiaries_procrear_2019_2023,"./processed_beneficiaries_procrear_2019_2023.csv")
+drive_update(as_id("1F2jVHklaEK7ihF4scWO097JQc1WUUxCu"),"./processed_beneficiaries_procrear_2019_2023.csv")
+file.remove("./processed_beneficiaries_procrear_2019_2023.csv")
+
+write.csv(processed_beneficiaries_potenciar_2019_2023,"./processed_beneficiaries_potenciar_2019_2023.csv")
+drive_update(as_id("16kmF-rpbQI60kvlAOVsJiCU5mGsECg3-"),"./processed_beneficiaries_potenciar_2019_2023.csv")
+file.remove("./processed_beneficiaries_potenciar_2019_2023.csv")
+
+
+```
+

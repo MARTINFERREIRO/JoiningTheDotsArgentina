@@ -1,0 +1,322 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+#DATA
+
+```{r}
+#BIEP
+file_url<-"https://drive.google.com/uc?export=download&id=1-IDOWCDiwp0UiKtqc0o1aTNJx2Yrr7dU"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path,sep=";") |> 
+  mutate(doc = as.character(doc))->external_empleados_pen_diciembre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1JS5wFMcPEPS6FVqgR5zMN_hOqEVMHbGE"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path,sep=";") |> 
+  mutate(doc = as.character(doc))->external_empleados_pen_noviembre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1qrMwG_MYoqMUhGnje3-h0juLSpVjwXNq"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path,sep=";")|> 
+  mutate(doc = as.character(doc))->external_empleados_pen_octubre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1Gm57Tll9eo2RXUIRgiwddetJNQ_hG_Y6"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path,sep=";")|> 
+  mutate(doc = as.character(doc))->external_empleados_pen_septiembre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1gUPXKYgNz9UqFtgZQiQgVNejTtkPAtdP"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path,sep=";")|> 
+  mutate(doc = as.character(doc))->external_empleados_pen_agosto_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1Q_s-72T71Cr9xYnQfFoxtrquvu_CuuUv"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path,sep=";")->external_empleados_pen_agosto_2023
+file.remove( file_content$local_path)
+
+```
+
+
+```{r}
+#Diputados
+file_url<-"https://drive.google.com/uc?export=download&id=176QizclrqxKc10sOXFvDGdwrdPDlG8q2"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> 
+  mutate(ejercicio = 2019)->external_empleados_diputados_diciembre_2019
+read_xlsx(file_content$local_path, sheet = "2020")|> 
+  mutate(ejercicio = 2020)->external_empleados_diputados_diciembre_2020
+read_xlsx(file_content$local_path, sheet = "2021")|> 
+  mutate(ejercicio = 2021)->external_empleados_diputados_diciembre_2021
+read_xlsx(file_content$local_path, sheet = "2022")|> 
+  mutate(ejercicio = 2022)->external_empleados_diputados_diciembre_2022
+read_xlsx(file_content$local_path, sheet = "2023")|> 
+  mutate(ejercicio = 2023) |> 
+  rename(`NUMERO DE DOCUMENTO` = `NRO DE DOCUMENTO`,
+         `FECHA DE INGRESO` =`FECHA INGRESO`,
+         `ESTRUCTURA DE DESEMPEÑO`=`ESTRUCTURA DESEMPEÑO`) |> 
+  mutate(`NUMERO DE DOCUMENTO` =as.numeric(`NUMERO DE DOCUMENTO`))->external_empleados_diputados_diciembre_2023
+file.remove( file_content$local_path)
+
+#2024 diputados sin dni
+file_url<-"https://drive.google.com/uc?export=download&id=1h3sgy3Muqnz__QtB4bYVjizKwcZ6vwRw"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->external_empleados_diputados_septiembre_2024_sin_dni
+file.remove( file_content$local_path)
+```
+
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni_pep))->processed_peps
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Empleados
+file_url<-"https://drive.google.com/uc?export=download&id=1y0jXMd3jAnDetdp1fr-jXBOIeuhgSFUK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni))->processed_empleados_ejecutivo
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1ng8ZeDJrLiUq9DcR82CYBg4vlGU2TDxH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_judicial
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1OtarWp_Yxf8Lj2paATMot5f2uAC3rAWL"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_legislativo
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Contributions
+file_url<-"https://drive.google.com/uc?export=download&id=1cK0lrE-MzjF1dZav_-8e9Q11Q8OHLoSb"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni_aportante=as.character(dni_aportante))->processed_contributions_2011_2025
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+colnames(external_empleados_pen_agosto_2023 )<-str_to_lower(colnames(external_empleados_pen_agosto_2023))
+external_empleados_pen_agosto_2023 |> 
+  mutate(doc = str_remove_all(cuil,"^..")) |> 
+  mutate(doc = str_remove_all(doc,".$")) |> 
+  mutate(doc = str_remove_all(doc,"^0")) |> 
+  select(-cuil,-cfu_org) |> 
+  rename(periodo = ultimo_registro)->auxiliar_2023
+
+bind_rows(external_empleados_pen_diciembre_2024, external_empleados_pen_noviembre_2024, external_empleados_pen_octubre_2024,
+          external_empleados_pen_septiembre_2024, external_empleados_pen_agosto_2024, auxiliar_2023) |> 
+  mutate(doc = as.character(doc)) ->external_empleados_pen_agosto_2023_diciembre_2024
+
+bind_rows(external_empleados_diputados_diciembre_2019, external_empleados_diputados_diciembre_2020, external_empleados_diputados_diciembre_2021,
+          external_empleados_diputados_diciembre_2022, external_empleados_diputados_diciembre_2023, external_empleados_diputados_septiembre_2024_sin_dni)->exteranl_empleados_diputados_2019_2024
+```
+
+#Empleados aportantes
+```{r}
+processed_contributions_2011_2025 |> 
+  filter(fecha_aporte>as.Date("2018-12-31"))->auxiliary_contributions_2019_2024
+bind_rows(processed_empleados_legislativo, processed_empleados_ejecutivo, processed_empleados_judicial)->processed_empleados_tres_poderes
+
+processed_empleados_tres_poderes |> 
+  select(-1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+ inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante"))->contributions_employees_2019_2025
+
+processed_empleados_legislativo |> 
+  select(-1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+ inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante"))->contributions_employees_legislativo_2019_2025
+
+processed_empleados_ejecutivo |> 
+  select(-1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+ inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante"))->contributions_employees_ejecutivo_2019_2025
+```
+
+
+
+```{r}
+#Ruth Barthelemy
+#aparece como empleada de diputads del bloque PTS entre 2015 y 2024
+#aparece como empleada de Indec desde septiembre de 2023 hasta hoy
+processed_empleados_tres_poderes |> 
+  filter(dni=="17759792")
+
+external_empleados_diputados_diciembre_2019 |> 
+  filter(`NUMERO DE DOCUMENTO`=="17759792")->barthelemy_2019
+
+external_empleados_diputados_diciembre_2020 |> 
+  filter(`NUMERO DE DOCUMENTO`=="17759792")->barthelemy_2020
+
+external_empleados_diputados_diciembre_2021 |> 
+  filter(`NUMERO DE DOCUMENTO`=="17759792")->barthelemy_2021
+
+external_empleados_diputados_diciembre_2022 |> 
+  filter(`NUMERO DE DOCUMENTO`=="17759792")->barthelemy_2022
+
+external_empleados_diputados_diciembre_2023 |> 
+  filter(`NUMERO DE DOCUMENTO`=="17759792")->barthelemy_2023
+
+external_empleados_diputados_septiembre_2024_sin_dni |> 
+  filter(str_detect(APELLIDO,"BARTHELEMY"))->barthelemy_2024
+
+bind_rows(barthelemy_2019, barthelemy_2020, barthelemy_2021, barthelemy_2022, barthelemy_2023, barthelemy_2024)->RuthBarthelemyEmpleoDiputados
+
+external_empleados_pen_agosto_2023_diciembre_2024 |> 
+  filter(doc=="17759792")->RuthBarthelemyEmpleoIndec
+
+
+
+
+```
+
+```{r}
+#MATIAS AUFIERIA
+#Aparece com emplead en diputads del bloque PTS entre 2015 y 2024
+
+processed_empleados_tres_poderes |> 
+  filter(dni=="28987151")
+
+exteranl_empleados_diputados_2019_2024 |> 
+  filter(`NUMERO DE DOCUMENTO`=="28987151")->MatiasAufieriEmpleoDiputados
+
+
+```
+
+```{r}
+#MATIAS PICCINELLI
+#Aparece com empleada en diputads del bloque PTS entre 2013 y 2024
+processed_empleados_tres_poderes |> 
+  filter(dni=="27150718")
+
+exteranl_empleados_diputados_2019_2024 |> 
+  filter(`NUMERO DE DOCUMENTO`=="27150718")->MatiasPiccinelliEmpleoDiputados
+
+```
+
+```{r}
+#JUAN CARLOS GIORDANO
+#Aparece com empleado en diputads del bloque PTS entre 2013 y 2024
+processed_empleados_tres_poderes |> 
+  filter(dni=="14907638")
+
+
+exteranl_empleados_diputados_2019_2024 |> 
+  filter(`NUMERO DE DOCUMENTO`=="14907638")->JuanCarlosGiordanoEmpleoDiputados
+```
+
+```{r}
+#CARLINA MARTIN ECHEVERRIA
+#Tenemos registr de ANSES sol en agsto de 2023
+processed_empleados_tres_poderes |> 
+  filter(dni=="25034166")
+
+external_empleados_pen_agosto_2023_diciembre_2024 |> 
+  filter(doc=="25034166")->CarolinaEcheverriaEmpleoAnses
+```
+
+
+```{r}
+processed_empleados_tres_poderes |> 
+  filter(dni=="31477868")
+
+
+
+external_empleados_pen_agosto_2023_diciembre_2024 |> 
+  filter(doc=="31477868")->VictoriaFreireEmpleoCapitalHumano
+```
+
+```{r}
+write_xlsx(RuthBarthelemyEmpleoDiputados,"RuthBarthelemyEmpleoDiputados.xlsx")
+write_xlsx(RuthBarthelemyEmpleoIndec,"RuthBarthelemyEmpleoIndec.xlsx")
+write_xlsx(MatiasAufieriEmpleoDiputados,"MatiasAufieriEmpleoDiputados.xlsx")
+write_xlsx(MatiasPiccinelliEmpleoDiputados,"MatiasPiccinelliEmpleoDiputados.xlsx")
+write_xlsx(JuanCarlosGiordanoEmpleoDiputados,"JuanCarlosGiordanoEmpleoDiputados.xlsx")
+write_xlsx(CarolinaEcheverriaEmpleoAnses,"CarolinaEcheverriaEmpleoAnses.xlsx")
+write_xlsx(VictoriaFreireEmpleoCapitalHumano,"VictoriaFreireEmpleoCapitalHumano.xlsx")
+```
+
+
+```{r}
+#Donaciones ARCA
+contributions_employees_2019_2025 |> 
+  filter(str_detect(organismo,"AFIP|ARCA|IMPUESTOS|RECAUDACI|ADU")) |> 
+  group_by(partido) |> 
+ summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#No coincide con l de emi REVISAR
+
+#62 personas donaron 100,000 el mismo  dia. Todos a union por la patria. Todos estaban trabajando en ese momento en ARCA
+contributions_employees_ejecutivo_2019_2025 |> 
+  filter(fecha_aporte==as.Date("2023-08-11")) |> 
+  filter(monto_aporte==100000) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  count(organismo) |> 
+  arrange(desc(n))
+
+```
+
+```{r}
+
+#Desarrollo social
+contributions_employees_2019_2025 |> 
+  filter(str_detect(organismo,"CAPITAL HUMANO|DESARRLLO SOCIAL")) |> 
+  group_by(partido) |> 
+ summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#El que más recibió es patria grande
+
+#VICTRIA fREIRE
+contributions_employees_ejecutivo_2019_2025 |> 
+  filter(dni=="31477868") |> 
+   mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes)
+```
+```{r}
+#Con control temporal
+processed_empleados_tres_poderes |> 
+  select(-1) |> 
+  inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante")) |> 
+  filter(fecha_aporte>=primer_registro_cargo&fecha_aporte<=ultimo_registro_cargo) |> 
+  distinct(dni, fecha_aporte, monto_aporte,partido, modalidad_aporte,.keep_all = TRUE)->contributions_employees_2019_2025_control_temporal
+  
+contributions_employees_2019_2025_control_temporal |> 
+  distinct(dni) |> nrow()
+#539
+
+#Monto total de donaciones por organiso
+contributions_employees_2019_2025_control_temporal |> 
+  group_by(organismo) |> 
+  summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#Diputados,ARCA,ANSES senado
+#Si tengo 270 donantes de ARCA
+
+```
+```{r}
+auxiliary_contributions_2019_2024 |> 
+  distinct(dni_aportante, monto_aporte, fecha_aporte, partido, modalidad_aporte)
+```
+

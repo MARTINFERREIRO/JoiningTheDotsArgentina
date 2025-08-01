@@ -1,0 +1,145 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Packages required
+```{r}
+#Loading required packages
+library(lubridate)
+library(RSelenium)
+library(rvest)
+library(tidyverse)
+library(netstat)
+library(wdman)
+library(writexl)
+library(readxl)
+```
+
+
+#Auxiliary functions
+
+```{r}
+scrape_resolucion<-function(url ="https://www.senado.gob.ar/administrativo/resolucionesAdministrativas", pausa=60){
+  
+  
+  lista_tablas<-list()
+  
+  rD <- rsDriver(browser = c("firefox"), #specify browser type you want Selenium to open
+               check = FALSE,
+               port = free_port(),
+               chromever = NULL,
+               geckover = "0.32.0",
+               verbose = FALSE, 
+               iedrver = NULL) 
+  
+  #Navigate to url
+  remDr <- rD$client
+  remDr$navigate(url)
+  Sys.sleep(pausa)
+  
+  option_100 <-  remDr$findElement(using = 'xpath', value = str_c("//option[text() = '", "100", "']"))
+ option_100$clickElement()
+ 
+ #NCount paginas
+ info_paginas<-remDr$findElement(using = "css selector", value ="#tablaProyectos_info")
+info_paginas$getElementText()[[1]] |> str_remove_all("\\D") |> as.numeric()->paginas
+((paginas/100) |> ceiling())-1->cambios_pagina
+
+for (i in 1:cambios_pagina) {
+  
+ for (i in 16:18) { 
+  #Celdas
+  celdas<-remDr$findElements(using = "css selector", value = "td")
+
+  #Links
+  links_elements <- remDr$findElements(using = "css selector", value = "a")
+
+  all_links <- sapply(links_elements, function(x) {
+    href_attr <- x$getElementAttribute("href")
+    if (length(href_attr) == 0 || is.null(href_attr[[1]])) {
+      return(NA_character_)
+    } else {
+      return(href_attr[[1]])
+    }
+  })
+  filtered_links <- all_links[grepl("downloadDecretos", all_links)]
+  
+
+
+  textos_celdas <- sapply(celdas, function(x) x$getElementText()[[1]])
+    # Find the index of the first non-empty string
+  first_non_empty_index <- which(textos_celdas != "")[1]
+#   Subset from that point onward
+  textos_celdas_clean <- textos_celdas[first_non_empty_index:length(textos_celdas)]
+  textos_celdas_clean <- textos_celdas_clean[1:400]
+
+  resoluciones<- textos_celdas_clean[seq(from = 1, to = 400, by = 4)]
+  fechas<- textos_celdas_clean[seq(from = 2, to = 400, by = 4)]
+  extractos<- textos_celdas_clean[seq(from = 3, to = 400, by = 4)]
+  
+  lista_tablas[[i]]<-tibble(resolucion=resoluciones, fecha=fechas, extracto=extractos, link=filtered_links)
+  
+   #Pasar pagina
+  next_buttom<-remDr$findElement(using = "css selector", value = ".paginate_button.next")
+  next_buttom$clickElement()
+  Sys.sleep(1)
+  }
+  
+return(lista_tablas)
+}
+
+
+  
+
+
+```
+
+#Resoluciones seccretaria administrativa
+```{r}
+scrape_resolucion(pausa = 25)->listado_resoluciones_administrativas
+```
+
+```{r}
+bind_rows(listado_resoluciones_administrativas)->resoluciones_Secretaria_administrativa
+```
+
+#Decretos presidenciales
+```{r}
+scrape_resolucion(url = "https://www.senado.gob.ar/administrativo/decretos", pausa = 60)->listado_decretos_presidenciales
+```
+
+```{r}
+listado_decretos_presidenciales |> bind_rows()->decretos_presidenciales
+```
+
+#Recursos humanos
+```{r}
+scrape_resolucion(url = "https://www.senado.gob.ar/administrativo/DI-RRHH", pausa = 60)->listado_resoluciones_rrhh
+```
+
+```{r}
+
+listado_resoluciones_rrhh |> bind_rows()->resoluciones_rrhh
+```
+
+
+#Read in data
+```{r}
+read_csv("./Resoluciones/decretos_presidenciales_julio2_2025.csv") |> mutate(origen="Secretaria Adeministrativa")->secretaria_administrativa
+read_csv("./Resoluciones/resoluciones_rrhh_julio2_2025.csv") |> select(-1)|> mutate(origen="Recursos Humanos")->recursos_humanos
+read_csv("./Resoluciones/resoluciones_secretaria_administrativa_julio2_2025.csv")|> mutate(origen="Presidencia")->presidencia
+```
+
+
+```{r}
+bind_rows(secretaria_administrativa, presidencia, recursos_humanos) |> 
+  mutate(designacion=str_detect(extracto,"DESIGNA"))->external_resoluciones_decretos_senado
+```
+
+
+```{r}
+external_resoluciones_decretos_senado |> 
+  write_csv("./Resoluciones/external_resoluciones_decretos_senado.csv")
+```
+

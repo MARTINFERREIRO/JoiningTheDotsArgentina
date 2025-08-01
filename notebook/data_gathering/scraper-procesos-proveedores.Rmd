@@ -1,0 +1,246 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Packages required
+```{r}
+#Loading required packages
+library(lubridate)
+library(RSelenium)
+library(rvest)
+library(tidyverse)
+library(netstat)
+library(wdman)
+library(writexl)
+library(readxl)
+library(googledrive)
+```
+
+#Data
+```{r}
+
+file_url<-"https://drive.google.com/uc?export=download&id=1KLQpii4Yr2k7XmEcCn2P__djggogQ37A"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->processed_proveedores_argentina_update_june2024
+file.remove( file_content$local_path)
+#CUIT para probar
+#30500852131
+#30678561165
+```
+
+#Functions required
+
+```{r}
+extract_table_procesos<-function(remDr, cuit_proveedor){
+  
+    #Buscamos la tabla
+  tabla<-remDr$findElements(using = "css selector", value = "td")
+  #Extraemos los textos de las celdas
+  texto_celdas <- sapply(tabla, function(x) x$getElementText()[[1]])
+   #Elimnamos las filas que sobran
+  indice_primer_elemento_necesario<- which(grepl(".", texto_celdas))[1]
+  texto_celdas_filtrado <- texto_celdas[indice_primer_elemento_necesario:length(texto_celdas)]
+  
+  indice_primer_elemento_innecesario<- which(grepl("\n|^\\s*$", texto_celdas_filtrado))[1]
+  texto_celdas_filtrado <- texto_celdas_filtrado[1:(indice_primer_elemento_innecesario - 1)]
+  
+   #Cheuqamos que nos quede un multiplo de 8, porque tenemos que tener 8 columnas
+  if(length(texto_celdas_filtrado) %% 8 != 0){
+    stop("No coincide el número de elementos extraidos con lo esperado")
+  }
+  
+  #Buscamos cuántos registros tendríamos en la tabla
+  registros<-length(texto_celdas_filtrado)/8
+  
+  #Transformamos los elementos extraidos a tabla nuevamente
+  tipos_de_elementos<-c("proceso","expediente","nombre","tipo","apertura","estado","unidad_ejecutora","servicio_administrativo")
+  tibble(elemento = texto_celdas_filtrado, tipo = rep(tipos_de_elementos, times=registros), id= rep(1:registros, each = 8) ) |> 
+    pivot_wider(names_from = tipo, values_from = elemento) |> 
+    mutate(cuit = cuit_proveedor) |> 
+    relocate(cuit) |> 
+    select(-id)->output
+  
+  
+return(output)
+  
+}
+```
+
+
+```{r}
+scrape_info_procesos<-function(cuit, pausa =5){
+  
+    url<-"https://comprar.gob.ar/BuscarAvanzado.aspx"
+  
+  lista_tablas<-list()
+  
+  rD <- rsDriver(browser = c("firefox"), #specify browser type you want Selenium to open
+               check = FALSE,
+               port = free_port(),
+               chromever = NULL,
+               geckover = "0.32.0",
+               verbose = FALSE, 
+               iedrver = NULL) 
+  
+    #Navigate to url
+  remDr <- rD$client
+  remDr$navigate(url)
+  
+  Sys.sleep(5)
+  
+  #Boton busqueda proveedor
+  buscar_proveedor_button<-remDr$findElement(using = "css selector", value =  "#ctl00_CPH1_btnBuscarProveedor")
+  buscar_proveedor_button$clickElement()
+  
+  Sys.sleep(1)
+  
+  
+  #Ingresar cuit
+  buscador_proveedor<-remDr$findElement(using = "css selector", value =  "#ctl00_CPH1_devCbPnlPopupListarProveedor_txtPopupCuitProveedor")
+   buscador_proveedor$sendKeysToElement(list(cuit))
+   
+   #Buscar
+   buscar_button<-remDr$findElement(using = "css selector", value = "#ctl00_CPH1_devCbPnlPopupListarProveedor_btnListarProveedor")
+   buscar_button$clickElement()
+   
+   Sys.sleep(2)
+   
+   
+   #Verficiamos si existe o no una tabla para estas categorias
+  verificacion<-remDr$findElement(using = "css selector", value = "#ctl00_CPH1_devCbPnlPopupListarProveedor_lblResultadoListarProveedor")
+  verificacion$getElementText()[[1]]->texto_en_pantalla
+
+  Sys.sleep(2)
+  
+  if(str_detect(texto_en_pantalla,"No se han encontrado resultados")){
+    rm(rD) # if necessary when rerunning
+    remDr$close()
+    gc()
+    return(tibble(cuit = cuit, proceso = NA, expediente = NA, nombre = NA, tipo = NA, apertura =NA, estado = NA,
+                  unidad_ejecutora = NA, servicio_administrativo = NA) )
+ 
+  }else{
+    
+           #Seleccionar
+   seleccionar_button<-remDr$findElement(using = "css selector", value = ".btn-link")
+   seleccionar_button$clickElement()
+   
+   Sys.sleep(1)
+   
+      #Buscar 2
+   buscar_button_2<-remDr$findElement(using = "css selector", value = "#ctl00_CPH1_btnListarPliegoAvanzado")
+   buscar_button_2$clickElement()
+   
+   Sys.sleep(pausa)
+    
+    #Buscamos la tabla
+  tabla<-remDr$findElements(using = "css selector", value = "td")
+  #Extraemos los textos de las celdas
+  texto_celdas <- sapply(tabla, function(x) x$getElementText()[[1]])
+  #Si no hay nada en las celdas, cortamos
+   if( all(!str_detect(texto_celdas,"\\d{2}/\\d{2}/\\d{2}")) ){
+         rm(rD) # if necessary when rerunning
+    remDr$close()
+    gc()
+     return(tibble(cuit = cuit, proceso = NA, expediente = NA, nombre = NA, tipo = NA, apertura =NA, estado = NA,
+                  unidad_ejecutora = NA, servicio_administrativo = NA) )
+   }
+
+    
+  paginas_extra<-TRUE
+  i<-1
+  indeces<-c(2:11, rep(c(3:12), times=1000))
+  ultimos_expedientes<-vector()
+  while (paginas_extra) {
+    
+
+    lista_tablas[[i]]<-extract_table_procesos(remDr = remDr, cuit_proveedor = cuit)
+    
+    
+    #Verificamos que efectivamente hayamos pasado de página
+    if(i>1){
+
+      if(identical(lista_tablas[[i]],lista_tablas[[i-1]])){
+      	Sys.sleep(20)
+      	lista_tablas[[i]]<-extract_table_alt(remDr = remDr)
+      	#Check we did not go back to a previous page
+      	
+      }
+      #if(any(lista_tablas[[i]]$expediente[10]%in%ultimos_expedientes )){break}
+      if( any( (ultimos_expedientes |> table()) >2 ) ){break}
+
+      
+    }else{}
+    
+    boton_pagina <- try(suppressMessages(remDr$findElement(using = "css selector", value = paste0("td:nth-child(",indeces[i],") a") ) ), silent=T)
+  
+    if(class(boton_pagina) == "try-error"){
+      Sys.sleep(30)
+      boton_pagina <- try(suppressMessages(remDr$findElement(using = "css selector", value = paste0("td:nth-child(",indeces[i],") a") ) ), silent=T)
+      if(class(boton_pagina) == "try-error"){
+        paginas_extra<-FALSE
+      }else{
+        paginas_extra<-TRUE
+        i<-i+1
+        boton_pagina$clickElement()
+        Sys.sleep(5)
+      }
+    }else{
+      paginas_extra<-TRUE
+      ultimos_expedientes[i]<- lista_tablas[[i]]$expediente[10]
+      i<-i+1
+      boton_pagina$clickElement()
+    Sys.sleep(5)
+    }
+    
+  }
+
+ 
+  #Close driver and trigger garbage collector
+    rm(rD) # if necessary when rerunning
+    remDr$close()
+    gc()
+    info_procesos <- bind_rows(lista_tablas)
+    return(info_procesos)
+    
+  }
+  
+}
+```
+
+#Scraping
+
+```{r}
+listado_contratos_proveedores<-list()
+```
+
+```{r}
+comienzo<-1
+final<-nrow(processed_proveedores_argentina_update_june2024)
+```
+
+```{r}
+for (i in comienzo:final) {
+  cuit_iteracion<-processed_proveedores_argentina_update_june2024$cuit[[i]]
+  scrape_info_procesos(cuit_iteracion)->listado_contratos_proveedores[[i]]
+  print(i)
+}
+bind_rows(listado_contratos_proveedores)->contratos_proveedores
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

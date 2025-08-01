@@ -1,0 +1,822 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+library(scales)
+```
+
+#DATA
+
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni_pep))->processed_peps
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Empleados
+file_url<-"https://drive.google.com/uc?export=download&id=1y0jXMd3jAnDetdp1fr-jXBOIeuhgSFUK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni))->processed_empleados_ejecutivo
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1ng8ZeDJrLiUq9DcR82CYBg4vlGU2TDxH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_judicial
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1OtarWp_Yxf8Lj2paATMot5f2uAC3rAWL"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_legislativo
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Prgramas sciales
+
+file_url<-"https://drive.google.com/uc?export=download&id=1GHGHjsaRn430Ngs73YdMSfUFwbR89wFH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_acompanar_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1f6fyk7j6SLnQXSNThFtniEIMqefrJhti"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_progresar_2018_2024
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=16kmF-rpbQI60kvlAOVsJiCU5mGsECg3-"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_potenciar_2020_2023
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=1nCF7QzJdR3JJwS2GezH_s1acdMwuhKDk"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_mi_pieza
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1dLcpxGP5tJH4sTaguHrYc_PodjSK-nsB"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_auh_2021_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1r-OFWTZrUCDq1UY7L1A0y8G5Wevdb-aa"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_alimentar_2020_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1F2jVHklaEK7ihF4scWO097JQc1WUUxCu"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_procrear_2019_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1NBHj2zNeg39T8I86iZzHcWNbtNIM9mgT"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_volver_trabajo_2024_2025
+file.remove( file_content$local_path)
+```
+
+```{r}
+#Contributions
+file_url<-"https://drive.google.com/uc?export=download&id=1cK0lrE-MzjF1dZav_-8e9Q11Q8OHLoSb"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni_aportante=as.character(dni_aportante))->processed_contributions_2011_2025
+file.remove( file_content$local_path)
+```
+
+```{r}
+#Sumar
+file_url<-"https://drive.google.com/uc?export=download&id=1Kn4i4FfcrBDmBJEBQcuzo0Elr4W3g_XT"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(doc = as.character(doc))->processed_aportantes_beneficiarios_sumar_2019_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1HmtvnOkB1ptDec_yOzUoE970qPkLGUvG"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(doc = as.character(doc))->processed_peps_beneficiarios_sumar_2019_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1_AW1wm7ARgx94_0uojaxCyTV8EMVaxhe"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(doc = as.character(doc))->processed_empleados_beneficiarios_sumar_2019_2024
+file.remove( file_content$local_path)
+
+```
+
+
+#AUXILIARY DATA FRAMES
+```{r}
+bind_rows( processed_beneficiaries_volver_trabajo_2024_2025, processed_beneficiaries_acompanar_2024, processed_beneficiaries_potenciar_2020_2023, 
+          processed_beneficiaries_auh_2021_2024, processed_beneficiaries_alimentar_2020_2024, processed_beneficiaries_progresar_2018_2024,
+         processed_beneficiaries_procrear_2019_2023,processed_beneficiaries_mi_pieza) |> 
+  select(dni_beneficiario, programa, alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan ) |> 
+  mutate(dni_beneficiario = as.character(dni_beneficiario))->auxiliar_beneficiarios_planes
+
+```
+
+```{r}
+processed_contributions_2011_2025 |> 
+  filter(fecha_aporte>as.Date("2018-12-31"))->auxiliary_contributions_2019_2024
+```
+
+```{r}
+bind_rows(processed_empleados_ejecutivo, processed_empleados_legislativo, processed_empleados_judicial) |> 
+  select(-1)->auxiliary_all_empleados
+```
+
+
+#CROSS MATCHING
+
+#PEPS BENEFICIARIOS
+```{r}
+auxiliar_beneficiarios_planes |> 
+  inner_join(processed_peps, by = c("dni_beneficiario"="dni"))->interim_beneficiarios_peps
+```
+
+```{r}
+#Actuales
+interim_beneficiarios_peps |> 
+  filter(ultimo_registro_pep >as.Date("2024-01-01")) |> 
+  filter(ultimo_registro_plan  >as.Date("2024-01-01")) |> 
+  relocate(nombre_completo_pep,cargo,organismo, partido_pep, programa, distrito_pep, ultimo_registro_pep,ultimo_registro_plan, primer_registro_pep, primer_registro_plan)
+```
+
+```{r}
+#MAGDA CILES LUCIANA AYALA 34544603
+#Es legisladora provincial peronista por el chaco
+#Fue intendenta de barranqueras enre 2019 y 2023
+#Cobra el volver al trabajoy cobraba el potenciar
+
+#LUCIANO GRACIANO MOSER
+#Tmb legisladore del chaco
+#De capitanich
+#Viene cobrando AUH y alimentar hace rato
+
+
+```
+
+
+#Empleados beneficiarios
+```{r}
+auxiliar_beneficiarios_planes |> 
+  inner_join(auxiliary_all_empleados, by = c("dni_beneficiario"="dni")) |> 
+  mutate(cobro_siendo_empleado = case_when(
+    primer_registro_cargo>primer_registro_plan& primer_registro_cargo<ultimo_registro_plan ~ TRUE,
+    ultimo_registro_cargo>primer_registro_plan& ultimo_registro_cargo<ultimo_registro_plan ~ TRUE,
+    TRUE ~ FALSE
+  ) ) |> 
+  mutate(contratado_por_correo = str_detect(categoria_cargo,"ELECTORAL"))->interim_beneficiarios_empleos
+```
+
+```{r}
+#Nos concentramos en lo actual
+interim_beneficiarios_empleos |> 
+  filter(cobro_siendo_empleado) |> 
+  filter(ultimo_registro_plan>as.Date("2024-01-01")) |> 
+  filter(ultimo_registro_cargo >as.Date("2024-01-01")) |> 
+  relocate(organismo, cargo, primer_registro_cargo, ultimo_registro_cargo, primer_registro_plan, ultimo_registro_plan)
+  distinct(dni_beneficiario)
+
+```
+
+
+#Beneficiarios aportantes
+```{r}
+#Find doners who received a plan
+auxiliar_beneficiarios_planes |> 
+  inner_join(auxiliary_contributions_2019_2024 |> filter(tipo_aportante=="HUMANA") , by = c("dni_beneficiario"="dni_aportante")) |> 
+  mutate(aporto_siendo_beneficiario =fecha_aporte>primer_registro_plan&fecha_aporte<ultimo_registro_plan)->interim_beneficiarios_aportes
+
+
+processed_aportantes_beneficiarios_sumar_2019_2024 |> 
+  mutate(primer_registro_plan = as.Date(paste0(primer_registro_plan, "-01-01"))  )|> 
+  mutate(ultimo_registro_plan =as.Date(  paste0(ultimo_registro_plan, "-12-31")) ) |> 
+  inner_join(auxiliary_contributions_2019_2024 |> filter(tipo_aportante=="HUMANA"), by = c("doc"="dni_aportante")) |> 
+  mutate(aporto_siendo_beneficiario =fecha_aporte>primer_registro_plan&fecha_aporte<ultimo_registro_plan)->contribuciones_beneficiarios_sumar_2019_2024
+
+```
+
+
+```{r}
+#Beneficiarios que hayan hecho aportes en algun momento
+#Son 476
+interim_beneficiarios_aportes |> 
+  distinct(dni_beneficiario)
+
+#Son aportes por un millón de dólares
+interim_beneficiarios_aportes |> 
+  distinct(dni_beneficiario) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  summarise(total_aportantes = length(unique(dni_beneficiario)),
+            total_aportes = sum(monto_aporte_usd, na.rm = TRUE))
+
+#Si nos quedamos solo con los apoarte hechos después de empezar a cobrar
+interim_beneficiarios_aportes |> 
+  filter(fecha_aporte>primer_registro_plan) |> 
+  arrange(primer_registro_plan) |> 
+  distinct(dni_beneficiario, .keep_all = TRUE) |>
+  select(dni_beneficiario, primer_registro_plan) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  #filter(!Anulado) |>  Para filtrar anulados
+   filter(fecha_aporte>primer_registro_plan) |> 
+  summarise(total_aportantes = length(unique(dni_beneficiario)),
+            total_aportes = sum(monto_aporte_usd, na.rm = TRUE),
+            total_aportes_pesos = sum(monto_aporte))
+
+interim_beneficiarios_aportes |> 
+  filter(fecha_aporte>primer_registro_plan) |> 
+  arrange(primer_registro_plan) |> 
+  distinct(dni_beneficiario, .keep_all = TRUE) |>
+  select(dni_beneficiario, primer_registro_plan) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+   filter(fecha_aporte>primer_registro_plan) |>
+  filter(!Anulado) |>  #Para filtrar anulados
+  group_by(partido) |> 
+  summarise(total_aportantes = length(unique(dni_beneficiario)),
+            total_aportes = sum(monto_aporte_usd, na.rm = TRUE)) |> 
+ungroup() |> 
+  arrange(desc(total_aportes))
+
+#Ver quienes aportaron mas
+#Sobresale mucho el caso de Maglio pero hay otros
+interim_beneficiarios_aportes |> 
+  distinct(dni_beneficiario) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  group_by(dni_beneficiario) |> 
+  mutate(total_aportes_beneficiario_usd = sum(monto_aporte_usd)) |> 
+  ungroup() |> 
+  arrange(desc(total_aportes_beneficiario_usd)) 
+```
+
+
+```{r}
+#Aportes mientras la persona era beneficiaria
+
+#Beneficiarios que hayan hecho aportes mientras eran beneficiarios 
+#(132)
+#Son aportes por 75 mil dolares
+interim_beneficiarios_aportes |> 
+  filter(aporto_siendo_beneficiario) |> 
+  distinct(dni_beneficiario)|> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  summarise(total_aportantes = length(unique(dni_beneficiario)),
+            total_aportes = sum(monto_aporte_usd, na.rm = TRUE))
+
+
+
+#Beneficiarios que hayan hecho aportes en 2023 mientras eran beneficiarios 
+#(82) por un total de 23 mil dolares
+#Si excluimos el procrear es lo mismo
+interim_beneficiarios_aportes |>
+  filter(fecha_aporte>as.Date("2022-12-31")) |> 
+  filter(fecha_aporte < as.Date("2024-01-01")) |> 
+  filter(aporto_siendo_beneficiario) |> 
+  distinct(dni_beneficiario) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  summarise(total_aportantes = length(unique(dni_beneficiario)),
+            total_aportes = sum(monto_aporte_usd, na.rm = TRUE))
+
+#Beneficiarios que hayan hecho aportes en 2024 mientras eran beneficiario
+#Son 10 y por unt toal de 15000 dolares
+interim_beneficiarios_aportes |>
+  filter(fecha_aporte>as.Date("2023-12-31")) |> 
+  filter(aporto_siendo_beneficiario) |> 
+  distinct(dni_beneficiario) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  summarise(total_aportantes = length(unique(dni_beneficiario)),
+            total_aportes = sum(monto_aporte_usd, na.rm = TRUE))
+
+#Ver quienes de los de 2024 aportaron mas
+interim_beneficiarios_aportes |>
+  filter(fecha_aporte>as.Date("2023-12-31")) |> 
+  filter(aporto_siendo_beneficiario) |> 
+  distinct(dni_beneficiario) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  group_by(dni_beneficiario) |> 
+  mutate(total_aportes_beneficiario_usd = sum(monto_aporte_usd)) |> 
+  ungroup() |> 
+  arrange(desc(total_aportes_beneficiario_usd)) |> 
+  relocate(dni_beneficiario, total_aportes_beneficiario_usd)
+```
+
+```{r}
+#2596 de los que aparecen en sumar hicieron contribuciones a la política
+#1358 de ellos en años en que fueron beneficiarios del SUMAR
+contribuciones_beneficiarios_sumar_2019_2024 |> 
+  filter(aporto_siendo_beneficiario) |> 
+  distinct(doc)
+
+#Hay varios que aportaron miles de dolares
+#Tengo 22 arriba de 10,000
+contribuciones_beneficiarios_sumar_2019_2024 |> 
+ # filter(!Anulado) |> 
+  filter(aporto_siendo_beneficiario) |> 
+  group_by(doc) |> 
+  mutate(total_aportes_usd = sum(monto_aporte_usd)) |> 
+  ungroup() |> 
+  arrange(desc(total_aportes_usd)) |> 
+  relocate(total_aportes_usd, ejercicios_registros) 
+
+#Marsengo y rocha aravena aparecen como beneficiarias
+contribuciones_beneficiarios_sumar_2019_2024 |> 
+  filter(doc=="32069348"|doc=="32462545"|doc=="33774072"|doc=="44250534")
+```
+
+
+
+
+```{r}
+#Analisis UP
+interim_beneficiarios_aportes |> 
+    filter( (primer_registro_plan>as.Date("2022-12-31") &primer_registro_plan<as.Date("2024-01-01") )|
+           (ultimo_registro_plan>as.Date("2022-12-31") &ultimo_registro_plan<as.Date("2024-01-01") )  |
+              (primer_registro_plan<as.Date("2022-12-31") &ultimo_registro_plan>as.Date("2024-01-01") )
+           ) |> 
+ 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+   filter(str_detect(partido,"LA PATRIA")) |> 
+  mutate(aporto_siendo_beneficiario =fecha_aporte>primer_registro_plan&fecha_aporte<ultimo_registro_plan) |> 
+  filter(programa!="PROCREAR") |> 
+ distinct(dni_beneficiario) |> 
+  left_join(auxiliary_contributions_2019_2024, by = c("dni_beneficiario"="dni_aportante") ) |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  filter(str_detect(partido,"LA PATRIA")) |> 
+  summarise(aportes =n(), total_pesos = sum(monto_aporte), total_usd = sum(monto_aporte_usd) )
+```
+
+#Empleados aportantes
+```{r}
+bind_rows( processed_empleados_ejecutivo,processed_empleados_legislativo, processed_empleados_judicial)->processed_empleados_tres_poderes
+
+processed_empleados_tres_poderes |> 
+  select(-1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+ inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante"))->contributions_employees_2019_2025
+
+processed_empleados_legislativo |> 
+  select(-1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+ inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante"))->contributions_employees_legislativo_2019_2025
+
+processed_empleados_ejecutivo |> 
+  select(-1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+ inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante"))->contributions_employees_ejecutivo_2019_2025
+```
+
+```{r}
+#Empleados que en algun momento hicieron donaciones
+contributions_employees_2019_2025 |> 
+  distinct(dni) |> nrow()
+#1847
+
+#Monto total de donaciones por organiso
+contributions_employees_2019_2025 |> 
+  group_by(organismo) |> 
+  summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#Diputados,ARCA,ANSES senado
+#Si tengo 270 donantes de ARCA
+
+
+```
+
+```{r}
+#Ruth Barthelemy
+#aparece como empleada de diputads del bloque PTS entre 2015 y 2024
+#aparece como empleada de Indec desde septiembre de 2023 hasta hoy
+processed_empleados_tres_poderes |> 
+  filter(dni=="17759792")
+
+#92 aportes entre 2019 y 2025 por un total de  60 mil dolares REVISAR
+contributions_employees_2019_2025 |> 
+  filter(dni=="17759792") |> 
+  mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes) 
+
+```
+
+```{r}
+#MATIAS AUFIERIA
+#Aparece com emplead en diputads del bloque PTS entre 2015 y 2024
+
+processed_empleados_tres_poderes |> 
+  filter(dni=="28987151")
+
+#77 aportes entre 2019 y 2025 por un total de  36  mil dolares 
+contributions_employees_2019_2025 |>
+  filter(dni=="28987151") |> 
+  mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes)
+```
+
+```{r}
+#MATIAS PICCINELLI
+#Aparece com empleada en diputads del bloque PTS entre 2013 y 2024
+processed_empleados_tres_poderes |> 
+  filter(dni=="27150718")
+
+#63 aportes entre 2019 y 2024 por un total de  37 mil dolares 
+contributions_employees_2019_2025 |>
+  filter(dni=="27150718") |> 
+  mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes)
+```
+
+```{r}
+#JUAN CARLOS GIORDANO
+#Aparece com empleado en diputads del bloque PTS entre 2013 y 2024
+processed_empleados_tres_poderes |> 
+  filter(dni=="14907638")
+
+#44 aportes entre 2019 y 2024 por un total de  43 mil dolares 
+contributions_employees_2019_2025 |>
+  filter(dni=="14907638") |> 
+  mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes)
+```
+
+```{r}
+#CARLINA MARTIN ECHEVERRIA
+#Tenemos registr de ANSES sol en agsto de 2023
+processed_empleados_tres_poderes |> 
+  filter(dni=="25034166")
+
+#11 aportes entre 2023 y 2025 por un total de  87 mil dolares al Frente Renovador
+contributions_employees_2019_2025 |>
+  filter(dni=="25034166") |> 
+  mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes)
+```
+
+```{r}
+#Donaciones ARCA
+contributions_employees_2019_2025 |> 
+  filter(str_detect(organismo,"AFIP|ARCA|IMPUESTOS|RECAUDACI|ADU")) |> 
+  group_by(partido) |> 
+ summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#No coincide con l de emi REVISAR
+
+#62 personas donaron 100,000 el mismo  dia. Todos a union por la patria. Todos estaban trabajando en ese momento en ARCA
+contributions_employees_ejecutivo_2019_2025 |> 
+  filter(fecha_aporte==as.Date("2023-08-11")) |> 
+  filter(monto_aporte==100000) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  count(organismo) |> 
+  arrange(desc(n))
+
+```
+
+```{r}
+
+#Desarrollo social
+contributions_employees_2019_2025 |> 
+  filter(str_detect(organismo,"CAPITAL HUMANO|DESARRLLO SOCIAL")) |> 
+  group_by(partido) |> 
+ summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#El que más recibió es patria grande
+
+#VICTRIA fREIRE
+contributions_employees_ejecutivo_2019_2025 |> 
+  filter(dni=="31477868") |> 
+   mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(fecha_aporte, monto_aporte_usd, total_aportes)
+```
+
+```{r}
+#Con control temporal
+processed_empleados_tres_poderes |> 
+  select(-1) |> 
+  inner_join(auxiliary_contributions_2019_2024, by = c("dni"="dni_aportante")) |> 
+  filter(fecha_aporte>=primer_registro_cargo&fecha_aporte<=ultimo_registro_cargo) |> 
+  distinct(dni, fecha_aporte, monto_aporte,partido, modalidad_aporte,.keep_all = TRUE)->contributions_employees_2019_2025_control_temporal
+  
+contributions_employees_2019_2025_control_temporal |> 
+  distinct(dni) |> nrow()
+#539
+
+#Monto total de donaciones por organiso
+contributions_employees_2019_2025_control_temporal |> 
+  group_by(organismo) |> 
+  summarise(donantes=length(unique(dni)), donaciones_usd = sum(monto_aporte_usd)) |> 
+  arrange(desc(donaciones_usd)) 
+#Diputados,ARCA,ANSES senado
+#Si tengo 270 donantes de ARCA
+
+```
+
+```{r}
+auxiliary_contributions_2019_2024 |> 
+  distinct(dni_aportante, monto_aporte, fecha_aporte, partido, modalidad_aporte)
+```
+
+#Elecciones 2023 aportes
+```{r}
+#"Cuantos donantes hubo en total en 2023"
+#"Cuantos tuvo union por la patria
+```
+
+```{r}
+#Cuantos donantes hubo en total en 2023"
+auxiliary_contributions_2019_2024 |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  distinct(dni_aportante) |> nrow()
+#5699
+
+#Cuantos donaron a UP, PJ o FRENTE RENOVADOR
+auxiliary_contributions_2019_2024 |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  #filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS")) |> 
+    filter(str_detect(partido,"POR LA PATRIA")) |> 
+  distinct(dni_aportante) |> nrow()
+#1781 (31%)
+```
+
+
+```{r}
+#Cuantos empleados donantes hubo en total en 2023"
+contributions_employees_2019_2025 |> 
+  filter( (primer_registro_cargo>as.Date("2022-12-31") &primer_registro_cargo<as.Date("2024-01-01") )|
+           (ultimo_registro_cargo>as.Date("2022-12-31") &ultimo_registro_cargo<as.Date("2024-01-01") )  |
+              (primer_registro_cargo<as.Date("2022-12-31") &ultimo_registro_cargo>as.Date("2024-01-01") )
+           ) |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  distinct(dni) |> nrow()
+#1068
+```
+
+```{r}
+#Cuantos empleados donaron al kirchnerismo peronismo en total en 2023"
+contributions_employees_2019_2025 |> 
+    filter( (primer_registro_cargo>as.Date("2022-12-31") &primer_registro_cargo<as.Date("2024-01-01") )|
+           (ultimo_registro_cargo>as.Date("2022-12-31") &ultimo_registro_cargo<as.Date("2024-01-01") )  |
+              (primer_registro_cargo<as.Date("2022-12-31") &ultimo_registro_cargo>as.Date("2024-01-01") )
+           ) |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  #filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS")) |> 
+    filter(str_detect(partido,"POR LA PATRIA")) |> 
+  distinct(dni, .keep_all = TRUE) |> nrow()
+#704 (66%) 
+#PATRIA, JUSTICIALISTA,FRENTE RENOVADOR, FRENTE DE TODOS
+#DEMOCRACIA Y LA EQUIDAD, PATRIA GRANDE
+```
+
+```{r}
+#Cuantos empleados donaron al kirchnerismo peronismo en total en 2023 POR ORGANISMO"
+contributions_employees_2019_2025 |> 
+  mutate(organismo = case_when(
+    str_detect(organismo,"AFIP|INGRESOS PUBLICOS")~ "ARCA",
+    str_detect(organismo,"ADMINISTRACION NACIONAL DE LA SEGURIDAD SOCIA")~ "ANSES",
+    TRUE~ organismo
+  )) |> 
+    filter( (primer_registro_cargo>as.Date("2022-12-31") &primer_registro_cargo<as.Date("2024-01-01") )|
+           (ultimo_registro_cargo>as.Date("2022-12-31") &ultimo_registro_cargo<as.Date("2024-01-01") )  |
+              (primer_registro_cargo<as.Date("2022-12-31") &ultimo_registro_cargo>as.Date("2024-01-01") )
+           ) |> 
+    #filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS")) |> 
+   filter(str_detect(partido,"POR LA PATRIA")) |> 
+  distinct(dni, .keep_all = TRUE) |>  count(organismo) |> 
+  arrange(desc(n))
+#ARCA APARECE PRIMERO CON DIFERENCIA, SEGUIDO DE MECON
+```
+
+
+
+```{r}
+#MIRAMOS DONACIONES DE ARCA
+
+#ARCA
+  contributions_employees_2019_2025 |> 
+  mutate(organismo = case_when(
+    str_detect(organismo,"AFIP|INGRESOS PUBLICOS")~ "ARCA",
+    TRUE~ organismo
+  )) |> 
+    filter( (primer_registro_cargo>as.Date("2022-12-31") &primer_registro_cargo<as.Date("2024-01-01") )|
+           (ultimo_registro_cargo>as.Date("2022-12-31") &ultimo_registro_cargo<as.Date("2024-01-01") )  |
+              (primer_registro_cargo<as.Date("2022-12-31") &ultimo_registro_cargo>as.Date("2024-01-01") )
+           ) |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  #filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS")) |> 
+    filter(str_detect(partido,"POR LA PATRIA")) |> 
+  filter(str_detect(organismo,"^ARCA")) |> 
+      relocate(monto_aporte, fecha_aporte, dni, destino_aporte) |> 
+  arrange(fecha_aporte)->auxiliar_donaciones_arca_2023
+
+
+  
+#CASI TODOS DONARON EL MISMO VALOR
+  ggplot(auxiliar_donaciones_arca_2023, aes(x = monto_aporte)) +
+  geom_histogram(binwidth = 1000, fill = "black", color = "black", alpha = 0.7) +
+  labs(
+    title = "Montos de los aportes a UP realizados por empleados de AFIP en 2023",
+    x = "Monto aportes",
+    y = "Cantidad de aportes"
+  )+
+  scale_x_continuous(labels = comma,breaks = seq(0, 300000, by = 25000)) +  # format the x-axis labels with commas (or you can use `scale_x_continuous(labels = scales::label_number())`)+
+    scale_y_continuous(breaks = seq(0, max(table(auxiliar_donaciones_arca_2023$monto_aporte)), by = 25)) + 
+  theme_minimal()
+
+
+  
+ #MUCHOS DONARON EL MISMO DIA
+
+  ggplot(auxiliar_donaciones_arca_2023, aes(x = fecha_aporte)) +
+  geom_histogram(binwidth = 1, fill = "black", color = "black", alpha = 0.7) +
+  labs(
+    title = "Fechas de aportes a UP realizados por empleados de AFIP en 2023",
+    x = "Fecha aporte",
+    y = "Cantidad de aportes"
+  ) +
+  scale_x_date(labels = date_format("%d-%m-%y"), breaks = "1 week") +
+  scale_y_continuous(breaks = seq(0, 80, by = 10)) + 
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 9),  # Smaller size for x-axis labels
+    axis.text.y = element_text(size = 8)  # Smaller size for y-axis labels
+  ) +
+  annotate(
+    "text", 
+    x = as.Date("2023-08-23"),  # Date for the 11th of August
+    y = 40,  # y-position, you may need to adjust this to match the height of your bar
+    label = "11-08-23",  # Text for annotation
+    angle = 00, 
+    size = 3, 
+    color = "red",  # Color of the annotation text
+    fontface = "bold", 
+    hjust = 0.5  # Center-align the annotation text
+  )+
+  annotate(
+    "segment", 
+    x = as.Date("2023-08-20"),  # Date for the 11th of August
+    xend = as.Date("2023-08-12"),  # Same x for the arrow
+    y = 40,  # Starting y-position for the arrow, adjust as needed
+    yend = 40,  # Ending y-position for the arrow
+    color = "red",  # Arrow color
+    size = 1, 
+    arrow = arrow(type = "closed", length = unit(0.1, "inches"))
+  )
+```
+
+```{r}
+#CHEQUEAMOS QUIENES ESTAN EN EL CARGO
+
+  processed_empleados_ejecutivo |> 
+    filter( (ultimo_registro_cargo>as.Date("2024-12-31") ) ) |> 
+  distinct(dni) -> empleados_actuales
+
+
+#Tipos de donaciones
+auxiliar_donaciones_arca_2023 |> 
+  count(destino_aporte)
+
+auxiliar_donaciones_arca_2023 |> 
+  count(partido)
+
+
+#Cuantos continuan en la APN
+auxiliar_donaciones_arca_2023 |> 
+  inner_join(empleados_actuales) |> 
+  distinct(dni) |> nrow()
+ 
+#Cuantos continuan en la APN y donaron en 2024
+auxiliar_donaciones_arca_2023 |> 
+  inner_join(empleados_actuales) |> 
+  distinct(dni) |> 
+  inner_join(auxiliary_contributions_2019_2024 |> filter(fecha_aporte>as.Date("2023-12-10")), by = c("dni"="dni_aportante"))
+``` 
+
+
+
+```{r}
+#Otros Patrones
+
+  contributions_employees_2019_2025 |> 
+  mutate(organismo = case_when(
+    str_detect(organismo,"AFIP|INGRESOS PUBLICOS")~ "ARCA",
+    str_detect(organismo,"ADMINISTRACION NACIONAL DE LA SEGURIDAD SOCIAL")~ "ANSES",
+    str_detect(organismo,"MINISTERIO DE ECONOMIA")~ "MECON",
+    str_detect(organismo,"MINISTERIO DE JUSTICIA")~ "MINISTERIO DE JUSTICIA",
+    TRUE~ organismo
+  )) |> 
+    filter( (primer_registro_cargo>as.Date("2022-12-31") &primer_registro_cargo<as.Date("2024-01-01") )|
+           (ultimo_registro_cargo>as.Date("2022-12-31") &ultimo_registro_cargo<as.Date("2024-01-01") )  |
+              (primer_registro_cargo<as.Date("2022-12-31") &ultimo_registro_cargo>as.Date("2024-01-01") )
+           ) |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") )->auxiliar_donaciones_employees_2023
+
+
+auxiliar_donaciones_employees_2023 |> 
+  filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS|DEMOCRACIA Y LA EQUIDAD|PATRIA GRANDE"))->auxiliar_donaciones_employees_k_2023
+
+
+```
+
+```{r}
+auxiliar_donaciones_employees_k_2023 |> 
+  count(organismo) |> 
+  arrange(desc(n))
+```
+
+
+```{r}
+#ANSES
+
+#DONACIONES TOTALES AL JUSTICIALISMO
+auxiliary_contributions_2019_2024 |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  #filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS")) |> 
+    filter(str_detect(partido,"JUSTICIALISTA")) |> 
+  distinct(dni_aportante) |> nrow()
+
+auxiliar_donaciones_employees_2023 |> 
+  #filter(str_detect(partido,"JUSTICIALISTA|FRENTE RENOVADOR|POR LA PATRIA|FRENTE DE TODOS")) |> 
+    filter(str_detect(partido,"JUSTICIALISTA")) |> 
+  distinct(dni, .keep_all = TRUE) |> nrow()
+
+#Organismo
+auxiliar_donaciones_employees_2023 |> 
+  filter(str_detect(partido, "JUSTICIALISTA")) |> 
+  distinct(dni, .keep_all = TRUE) |>  count(organismo) |> 
+  arrange(desc(n)) |> 
+  mutate(total = sum(n))
+
+auxiliar_donaciones_employees_2023 |> 
+  filter(str_detect(organismo,"ANSES")) |> 
+  filter(str_detect(partido,"JUSTICIALISTA"))->donaciones_empleados_anses_pj_2023
+
+#Fecha
+donaciones_empleados_anses_pj_2023 |> 
+  filter(monto_aporte==100000) |> 
+  count(fecha_aporte) |> 
+  arrange(desc(n)) |> 
+  mutate(total = sum(n))
+
+#monto
+donaciones_empleados_anses_pj_2023 |> 
+  count(monto_aporte) |> 
+  arrange(desc(n)) |> 
+  mutate(total = sum(n))
+
+#CHEQUEAMOS PARA TRANSPORTE, DESARROLLO SOCIAL, DESARROLLO TERRITORIAL, ECONOMIA, JUSTICIA Y TRENES Y NO HAY NADA
+```
+
+```{r}
+  ggplot(donaciones_empleados_anses_pj_2023, aes(x = monto_aporte)) +
+  geom_histogram(binwidth = 1000, fill = "black", color = "black", alpha = 0.7) +
+  labs(
+    title = "Montos de los aportes al PJ realizados por empleados de ANSES en 2023",
+    x = "Monto aportes",
+    y = "Cantidad de aportes"
+  )+
+  scale_y_continuous(breaks = seq(0, 100, by = 25)) + 
+  scale_x_continuous(labels = comma,breaks = seq(0, 1000000, by = 100000)) +  # format the x-axis labels with commas (or you can use `scale_x_continuous(labels = scales::label_number())`)+
+    
+  theme_minimal()
+
+
+```
+
+
+
+```{r}
+auxiliary_contributions_2019_2024 |> 
+  filter(fecha_aporte>as.Date("2022-12-31")& fecha_aporte<as.Date("2024-01-01") ) |> 
+  anti_join(auxiliar_donaciones_employees_2023, by = c("dni_aportante"="dni"))->donaciones_no_empleados_2023
+
+donaciones_no_empleados_2023 |> 
+  count(monto_aporte) |> 
+  arrange(desc(n)) |> 
+  mutate(total  =sum(n)) |> 
+  mutate(procentaje = n/total*100)
+
+
+
+ ggplot(donaciones_no_empleados_2023 |> filter(monto_aporte<500000, monto_aporte>0), aes(x = monto_aporte)) +
+  geom_histogram(binwidth = 1000, fill = "black", color = "black", alpha = 0.7) +
+  labs(
+    title = "Montos de los aportes al PJ realizados por empleados de ANSES en 2023",
+    x = "Monto aportes",
+    y = "Cantidad de aportes"
+  )+
+  scale_y_continuous(breaks = seq(0, 1000, by = 100)) + 
+  scale_x_continuous(labels = comma,breaks = seq(0, 1000000, by = 100000)) +  # format the x-axis labels with commas (or you can use `scale_x_continuous(labels = scales::label_number())`)+
+    
+  theme_minimal()
+
+  
+```
+

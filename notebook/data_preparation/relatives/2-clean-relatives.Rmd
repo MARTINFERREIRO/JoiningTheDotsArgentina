@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+
+#Load data
+
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1DrFFqgJxw4Aj8ZbbZuu_EzS6_fd3p3bo"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->external_familiares_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1fK27nQCr_nAHPuVRWxgF6Uh1ow1M-XrK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->external_familiares_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1o2CRv1f8aqSxRIaexxHra-BICjVs9oqQ"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->external_familiares_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1AEDuYOHX_EdlsXi7SZD61aMuV8AfBywB"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->external_familiares_2020
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/file/d/1EoXEaSog8qwHTwPv7ZHNl9uUzi_ewda5/view?usp=drive_link"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->external_familiares_2018
+file.remove( file_content$local_path)
+```
+
+#Cleand data
+```{r}
+bind_rows(external_familiares_2023, external_familiares_2022, external_familiares_2021, external_familiares_2020, external_familiares_2018) |> 
+  select(-dj_id, -anio, -tipo_declaracion_jurada_id, -tipo_declaracion_jurada_descripcion, -rectificativa) |> 
+  mutate(dni_funcionario = str_remove_all(cuit,"^..|.$")) |> 
+  mutate(dni_funcionario = str_remove_all(dni_funcionario,"^0")) |> 
+  mutate(dni_familiar = str_remove_all(familiar_cuit,"^..|.$")) |> 
+  mutate(dni_familiar = str_remove_all(dni_familiar,"^0")) |> 
+  select(-cuit, -familiar_cuit,-funcionario_apellido_nombre) |> 
+  distinct(dni_funcionario, dni_familiar,.keep_all = TRUE) |> 
+  rename(nombre_completo_familiar = familiar_apellido_nombre,
+         genero_familiar= familiar_genero, fecha_nacimiento_familiar = familiar_fecha_nacimiento,
+         vinculo= familiar_parentesco) |> 
+  relocate(dni_funcionario, dni_familiar) |> 
+  mutate(fecha_nacimiento_familiar = dmy(fecha_nacimiento_familiar))->processed_familiares_2018_2023
+```
+
+
+#Save
+```{r}
+write.csv(processed_familiares_2018_2023,"./processed_familiares_2018_20235.csv")
+drive_update(as_id("1235V-45c1peE68MbT0L_ucVeIovlDmZt"),"./processed_familiares_2018_2023.csv")
+file.remove("./processed_familiares_2018_2023.csv")
+
+```
+

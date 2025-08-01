@@ -1,0 +1,112 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Packages required
+```{r}
+#Loading required packages
+library(lubridate)
+library(tidyverse)
+library(writexl)
+library(readxl)
+library(googledrive)
+```
+
+#Data
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=154bzca6jRZi1f2WwTGdLl9J4qYLo4Y9X"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> 
+  rename(registro=fecha) |> 
+  mutate(registro=dmy(registro))->external_proveedores_argentina_update_june2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1bZR53upN4IAc8aMo0gZuhbFasU2LSqKi"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_inscriptos_update_july2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1T_tpV6Cv6XNEmSWNvACRXlioVAcxxm6v"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_inscriptos_annex_update_july2025
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=1JthLzzNdWwJ_BeecWEYnRaKb4V4Qqfyn"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_no_inscriptos_update_july2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=16X-JW457VjJbA7HALTf6r0mDyA-geRPR"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_pre_inscriptos_update_july2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1eEJ0RvoTA4pPwbcs-GR_ARfmRKW8v1TL"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_desactualizados_doc_update_july2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1FKdR1jAEtipH5Ge5RLzOPg_sFoQNZLk8"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_inhabilitados_july2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1A3MjrhKxdjgqSsxp8Z8fTusSLmvt3p2r"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(cuit=as.character(cuit))->external_proveedores_argentina_suspendidos_july2025
+file.remove( file_content$local_path)
+
+
+```
+
+#Functions
+```{r}
+
+ 
+ remove_accented_vowels <- function(input_string) {
+  # Replace accented vowels with their non-accented counterparts
+  output_string <- gsub("á", "a", input_string)
+  output_string <- gsub("é", "e", output_string)
+  output_string <- gsub("í", "i", output_string)
+  output_string <- gsub("ó", "o", output_string)
+  output_string <- gsub("ú", "u", output_string)
+  
+  # Optional: replace the uppercase vowels too
+  output_string <- gsub("Á", "A", output_string)
+  output_string <- gsub("É", "E", output_string)
+  output_string <- gsub("Í", "I", output_string)
+  output_string <- gsub("Ó", "O", output_string)
+  output_string <- gsub("Ú", "U", output_string)
+  
+  return(output_string)
+}
+```
+
+
+
+
+#Cleaning
+```{r}
+external_proveedores_argentina_inscriptos_update_july2025 |> 
+  bind_rows(external_proveedores_argentina_inscriptos_annex_update_july2025) |> 
+  bind_rows(external_proveedores_argentina_no_inscriptos_update_july2025) |> 
+  bind_rows(external_proveedores_argentina_pre_inscriptos_update_july2025) |> 
+  bind_rows(external_proveedores_argentina_desactualizados_doc_update_july2025) |> 
+  bind_rows(external_proveedores_argentina_inhabilitados_july2025) |> 
+  bind_rows(external_proveedores_argentina_suspendidos_july2025) |> 
+  select(-iteracion) |> 
+  bind_rows(external_proveedores_argentina_update_june2024) |> 
+    distinct(cuit, .keep_all = TRUE) |> 
+  mutate(across(where(is.character), ~remove_accented_vowels(.)))->processed_proveedores_argentina_update_july_2025
+```
+
+```{r}
+  write_csv(processed_proveedores_argentina_update_july_2025,"processed_proveedores_argentina_update_july_2025.csv")
+  drive_update(as_id("1KLQpii4Yr2k7XmEcCn2P__djggogQ37A"),"processed_proveedores_argentina_update_july_2025.csv")
+  file.remove("processed_proveedores_argentina_update_july_2025.csv")
+```
+
+
+

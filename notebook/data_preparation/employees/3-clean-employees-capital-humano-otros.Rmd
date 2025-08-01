@@ -1,0 +1,1065 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+library(pdftools)
+```
+
+#Load data
+
+```{r}
+#Gabinete
+file_url<-"https://drive.google.com/uc?export=download&id=1VUE3WTSo03E5gANO_9rB5Kf3CwqGf1fC"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_jefatura_gabinete_2019
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1nqJG-O7vOQU8dsgEsZTbrwnvQ6Ary0RG"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_jefatura_gabinete_2020
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=10BnqNrs6Ab39MAxY3bSVUZHI0uGgueGi"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_jefatura_gabinete_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1sGFrii8yGoeC_6NUSGO2vyHgxklo9aUM"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_jefatura_gabinete_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1tr4eLsm4OnjDnz6Wbx2F9vaWilnf78kE"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, skip = 1)->external_empleados_locacion_jefatura_gabinete_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=10z3o4fH40hanU5iqvNqrcGjHGG-I9DLh"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, skip = 1)->external_empleados_locacion_jefatura_gabinete_2024
+file.remove( file_content$local_path)
+
+#Certificaciones
+file_url<-"https://drive.google.com/uc?export=download&id=1_M45C0wm5IpWGAETyd4AN0DWvSnN1MP0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> mutate(mes = "SEPTIEMBRE")->external_certificaciones_servicios_jefatura_gabinete_sep_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1_M45C0wm5IpWGAETyd4AN0DWvSnN1MP0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, sheet = "OCTUBRE 2024")|> mutate(mes = "OCTUBRE")->external_certificaciones_servicios_jefatura_gabinete_oct_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1_M45C0wm5IpWGAETyd4AN0DWvSnN1MP0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, sheet = "NOVIEMBRE 2024")|> mutate(mes = "NOVIEMBRE")->external_certificaciones_servicios_jefatura_gabinete_nov_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1_M45C0wm5IpWGAETyd4AN0DWvSnN1MP0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, sheet = "DICIEMBRE 2024")|> mutate(mes = "DICIEMBRE")->external_certificaciones_servicios_jefatura_gabinete_dec_2024
+file.remove( file_content$local_path)
+```
+
+
+
+```{r}
+#Secretaria economia social
+file_url<-"https://drive.google.com/uc?export=download&id=19fUGv_sShiHMGLgUym7u05WDAjmNsQSc"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, sheet = "dec-2023")->external_empleados_locacion_min_capital_humano_secretaria_economia_social_dec_2023
+read_xlsx(file_content$local_path, sheet = "1t-2024")->external_empleados_locacion_min_capital_humano_secretaria_economia_social_1t_2024
+read_xlsx(file_content$local_path, sheet = "2t-2024")->external_empleados_locacion_min_capital_humano_secretaria_economia_social_2t_2024
+read_xlsx(file_content$local_path, sheet = "3t-2024")->external_empleados_locacion_min_capital_humano_secretaria_economia_social_3t_2024
+read_xlsx(file_content$local_path, sheet = "4t-2024")->external_empleados_locacion_min_capital_humano_secretaria_economia_social_4t_2024
+file.remove( file_content$local_path)
+```
+
+```{r}
+#Secretaria familiar
+file_url<-"https://drive.google.com/uc?export=download&id=1xnfl8ZKRXDGXeZrQmLPcdtBg_M6-wRl0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, sheet = "Dec-2023")->external_empleados_locacion_min_capital_humano_secretaria_familia_Dec_2023
+read_xlsx(file_content$local_path, sheet = "Ene-Mar-2024")->external_empleados_locacion_min_capital_humano_secretaria_familia_Ene_Mar_2024
+read_xlsx(file_content$local_path, sheet = "Abr-Jun-2024")->external_empleados_locacion_min_capital_humano_secretaria_familia_Abr_Jun_2024
+read_xlsx(file_content$local_path, sheet = "Jul-Sept-2024")->external_empleados_locacion_min_capital_humano_secretaria_familia_Jul_Sept_2024
+read_xlsx(file_content$local_path, sheet = "Oct-Dec-2024")->external_empleados_locacion_min_capital_humano_secretaria_familia_Oct_Dec_2024
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Secretaria trabajo
+file_url<-"https://drive.google.com/uc?export=download&id=1PkLD3qJClnnZyCH7jQIMi5UTsJF8hSCv"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, col_names = FALSE)->external_empleados_locacion_min_capital_humano_secretaria_trabajo_1t_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=166H22PRlc8qP2mdKCXrkn06M6meUP-Dc"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, col_names = FALSE)->external_empleados_locacion_min_capital_humano_secretaria_trabajo_2t_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1woHiaAPa8Z5gMrOYZOTlDg2EkLkQahWF"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, col_names = FALSE)->external_empleados_locacion_min_capital_humano_secretaria_trabajo_3t_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1yQp_iKIdPAcg32HGD-rSu29UsrYejBLU"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, col_names = FALSE)->external_empleados_locacion_min_capital_humano_secretaria_trabajo_4t_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1zkABZxLb73XB_vvZ38N5lYbquB-f-Qcg"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, col_names = FALSE)->external_empleados_locacion_min_capital_humano_secretaria_trabajo_dec_2023
+file.remove( file_content$local_path)
+```
+
+```{r}
+#Secretaria educacion
+file_url<-"https://drive.google.com/uc?export=download&id=1Z7aks8tMc8nr6tf-U-e484F4f1pBdGf3"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_min_capital_humano_secretaria_educacion_Dec_2023
+read_xlsx(file_content$local_path, sheet = "Altas2024")->external_empleados_locacion_min_capital_humano_secretaria_educacion_altas_2024
+read_xlsx(file_content$local_path, sheet = "Ene-Feb-2024")->external_empleados_locacion_min_capital_humano_secretaria_educacion_ene_feb_2024
+read_xlsx(file_content$local_path, sheet = "Mar-2024")->external_empleados_locacion_min_capital_humano_secretaria_educacion_mar_2024
+read_xlsx(file_content$local_path, sheet = "Abr-Jun-2024")->external_empleados_locacion_min_capital_humano_secretaria_educacion_abr_jun_2024
+read_xlsx(file_content$local_path, sheet = "Jul-Sept")->external_empleados_locacion_min_capital_humano_secretaria_educacion_jul_sep_2024
+read_xlsx(file_content$local_path, sheet = "Oct-Dec-2024")->external_empleados_locacion_min_capital_humano_secretaria_educacion_oct_dec_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=11-01zj4mIEMOtahe4o_le9MZXhVXcn8W"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_min_capital_humano_secretaria_educacion_2024_complemento
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Capital humano cultura y legales
+file_url<-"https://drive.google.com/uc?export=download&id=1NQMTydgYU2k4zwXtgQ_H0SIuwK0R98oU"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_empleados_locacion_min_capital_humano_cultura_legal_asesores_dec_2023
+read_xlsx(file_content$local_path,sheet = "LOYS ENERO A SEPTIEMBRE 2024")->external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=1pe3vSRXkNvkzsQaMYEJ32tc5hh_qDkXh"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> 
+  mutate(C.U.I.T=as.character(C.U.I.T))->external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_1t
+read_xlsx(file_content$local_path,sheet = "Abr-Jun 2024")|> 
+  mutate(C.U.I.T=as.character(C.U.I.T))->external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_2t
+read_xlsx(file_content$local_path,sheet = "Jul-Sep 2024")|> 
+  mutate(C.U.I.T=as.character(C.U.I.T))->external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_3t
+read_xlsx(file_content$local_path,sheet = "Oct-Dic 2024")|> 
+  mutate(C.U.I.T=as.character(C.U.I.T))->external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_4t
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1y0jXMd3jAnDetdp1fr-jXBOIeuhgSFUK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_empleados_ejecutivo
+file.remove( file_content$local_path)
+```
+
+#Functions
+```{r}
+replace_accented_vowels <- function(input_string) {
+  input_string |>
+    str_replace("Á", "A") |>
+    str_replace("É", "E") |>
+    str_replace("Í", "I") |>
+    str_replace("Ó", "O") |>
+    str_replace("Ú", "U")
+}
+
+excel_to_date <- function(serial_number) {
+  # Excel's starting date (1 = 1900-01-01)
+  
+  serial_number_numeric = as.numeric(serial_number)
+  start_date <- as.Date("1900-01-01")
+  
+  # Add the serial number minus 1 (since Excel starts counting from 1)
+  converted_date <- start_date + (serial_number_numeric- 2)
+  
+  formatted_date <- format(converted_date, "%d/%m/%Y")
+  
+  return(formatted_date)
+}
+
+ammend_dates<-function(original_dates){
+  
+  cleaned_dates<-vector()
+  
+  for (i in 1:length(original_dates)) {
+    
+    original_date<-original_dates[i]
+    
+    if(str_detect(original_date,"/")){
+      cleaned_dates[i]<-original_date
+      
+    }else
+    cleaned_dates[i]<-excel_to_date(original_date)
+  }
+  
+  return(cleaned_dates)
+  
+}
+
+search_record_date<-function(ids, type_search, df_dates){
+  
+  fechas_registros<-vector()
+  
+  for (i in 1:length(ids)) {
+    id_iteration<-ids[i]
+    data_iteracion<-df_dates |> 
+      filter(dni == id_iteration)
+    
+    if(type_search=="PRIMER REGISTRO"){
+      data_iteracion$primer_registro_cargo |> min() |> as.character()->fechas_registros[i]
+    }else if(type_search=="ULTIMO REGISTRO"){
+      data_iteracion$ultimo_registro_cargo |> max() |> as.character()->fechas_registros[i]
+    }else{
+      stop(print("type_search must be PRIMER REGISTRO or ULTIMO REGISTRO"))
+    }
+    
+  }
+  
+  tibble(dni = ids, registro = fechas_registros)->output
+  return(output)
+  
+}
+
+verify_date<-function(dates){
+  fechas_verificadas<-vector()
+  
+  for (i in 1:length(dates)) {
+    fecha_a_verificar<-dates[i]
+    
+    dia<-str_extract(fecha_a_verificar,"^\\d{2}")
+    mes<-str_extract(fecha_a_verificar,"(?<=\\d\\d/)\\d{2}(?=/)")
+    anio<-str_extract(fecha_a_verificar,"\\d{4}")
+    
+    if(as.numeric(dia)<13&as.numeric(mes)<12){
+      fechas_verificadas[i]<-paste0(mes, "/",dia,"/",anio)
+    }else{
+      fechas_verificadas[i]<-fecha_a_verificar
+    }
+    
+  }
+  
+  return(fechas_verificadas)
+}
+```
+
+#CLEAN
+
+#Jefatura
+```{r}
+
+#2024
+external_empleados_locacion_jefatura_gabinete_2024 |> 
+  select(`ORGANISMO-EMPLEADOR`,`UNIDAD ORGANIZATIVA`, D.N.I.,`OBJETO DE CONTRATACION`, `DETALLE DEL SERVICIO`, `NUMERO DE CONTRATO...14`,
+`NUMERO DE CONTRATO...20`,`NUMERO DE CONTRATO...26`, `NUMERO DE CONTRATO...32`, `NUMERO DE CONTRATO...38`, `NUMERO DE CONTRATO...41`) |> 
+  rename(organismo = `ORGANISMO-EMPLEADOR`, estructura = `UNIDAD ORGANIZATIVA`,dni = D.N.I., cargo = `OBJETO DE CONTRATACION`, 
+         categoria_cargo = `DETALLE DEL SERVICIO`, contrato_diciembre =  `NUMERO DE CONTRATO...14`, contrato_septiembre = `NUMERO DE CONTRATO...20`,
+         contrato_agosto = `NUMERO DE CONTRATO...26`, contrato_julio = `NUMERO DE CONTRATO...32`, contrato_junio = `NUMERO DE CONTRATO...38`,
+         contrato_enero = `NUMERO DE CONTRATO...41`) |> 
+  mutate(dni = case_when(
+    str_detect(dni , "E7")~ str_remove_all(dni, "\\.|E7"),
+    !str_detect(dni , "E7")~ str_remove_all(dni,"\\.|0$"),
+    TRUE ~ dni
+  )) |> 
+  mutate_if(is.character, ~str_remove_all(., "-")) |> 
+   mutate_if(is.character, ~na_if(., "")) |> 
+  mutate(primer_registro_cargo = case_when(
+    !is.na(contrato_enero)~ "2024-01-01",
+     !is.na(contrato_junio)~ "2024-06-01",
+    !is.na(contrato_julio)~ "2024-07-01",
+    !is.na(contrato_agosto)~ "2024-08-01",
+    !is.na(contrato_septiembre)~ "2024-09-01",
+    TRUE~ "2024-12-01",
+    
+  )) |> 
+  mutate(ultimo_registro_cargo  = case_when(
+    !is.na(contrato_diciembre)~"2024-12-31",
+    !is.na(contrato_septiembre)~"2024-09-30",
+    !is.na(contrato_agosto)~"2024-08-31",
+    !is.na(contrato_julio)~"2024-07-31",
+    !is.na(contrato_junio)~"2024-06-30",
+    TRUE ~ "2024-05-30",
+  )) |> 
+  select(-contrato_diciembre, -contrato_septiembre, -contrato_agosto, - contrato_julio, -contrato_junio, -contrato_enero)->auxiliar_empleados_locacion_jefatura_gabinete_2024
+
+
+#2023
+external_empleados_locacion_jefatura_gabinete_2023 |> 
+  select(`ORGANISMO-EMPLEADOR`,`SECRETARÍA SOLICITANTE DE LA CONTRATACION`,D.N.I., `OBJETO DE CONTRATACION`, 
+         `FECHA DE INICIO Y FINALIZACION DE CONTRATACION...16`,`FECHA DE INICIO Y FINALIZACION DE CONTRATACION...22`, `FECHA DE INICIO Y FINALIZACION DE CONTRATACION...28`) |> 
+   rename(organismo = `ORGANISMO-EMPLEADOR`, estructura = `SECRETARÍA SOLICITANTE DE LA CONTRATACION`,dni = D.N.I., cargo = `OBJETO DE CONTRATACION`, 
+        contrato_octubre=  `FECHA DE INICIO Y FINALIZACION DE CONTRATACION...16`,contrato_mayo=  `FECHA DE INICIO Y FINALIZACION DE CONTRATACION...22`,
+        contrato_abril=  `FECHA DE INICIO Y FINALIZACION DE CONTRATACION...28`,) |> 
+  mutate(dni = str_remove_all(dni,"\\.|E7")) |> 
+  mutate(categoria_cargo =str_extract(cargo,"II|I")) |> 
+  mutate(cargo =str_remove_all(cargo,"II|I")) |> 
+  mutate_if(is.character, ~str_remove_all(., "-")) |> 
+   mutate_if(is.character, ~na_if(., "")) |> 
+  mutate(contrato_abril = str_remove_all(contrato_abril,"AL.+")) |> 
+   mutate(contrato_mayo = str_remove_all(contrato_mayo,"AL.+")) |> 
+   mutate(contrato_octubre = str_remove_all(contrato_octubre,"AL.+")) |> 
+  mutate(contrato_abril= as.character(dmy(contrato_abril))) |>
+  mutate(contrato_mayo= as.character(dmy(contrato_mayo))) |>
+  mutate(contrato_octubre= as.character(dmy(contrato_octubre))) |> 
+  mutate(primer_registro_cargo = case_when(
+    !is.na(contrato_abril)~ contrato_abril,
+    !is.na(contrato_mayo)~contrato_mayo,
+    TRUE ~ contrato_octubre
+  )) |> 
+  mutate(ultimo_registro_cargo = case_when(
+    !is.na(contrato_octubre)~ "2023-12-31",
+    !is.na(contrato_mayo)~ "2023-05-31",
+    TRUE ~ "2023-04-30"
+  )) |> 
+  select(-contrato_octubre,-contrato_mayo, -contrato_abril)->auxiliar_empleados_locacion_jefatura_gabinete_2023 
+  
+
+#2022
+external_empleados_locacion_jefatura_gabinete_2022 |> 
+  select(`ORGANISMO-EMPLEADOR`,DEPENDENCIA, D.N.I., `PERÍODO DE CONTRATACIÓN 2022`, `OBJETO DE CONTRATACION`) |> 
+  rename(organismo =`ORGANISMO-EMPLEADOR`,estructura = DEPENDENCIA,dni = D.N.I.,periodo=`PERÍODO DE CONTRATACIÓN 2022`, cargo = `OBJETO DE CONTRATACION`) |> 
+  mutate(categoria_cargo =str_extract(cargo,"II|I")) |> 
+  mutate(cargo = str_remove_all(cargo,"II|I")) |> 
+  mutate(cargo = str_remove_all(cargo,"-|\n")) |> 
+  mutate(dni = as.character(dni)) |> 
+  mutate(periodo = str_remove_all(periodo,"ALTA CONTRATO|\n|MODIF\\.")) |> 
+  mutate(primer_registro_cargo = str_extract(periodo,"\\d\\d/\\d\\d/\\d{4}")) |>
+  mutate(ultimo_registro_cargo = str_extract(periodo,"AL.+")) |> 
+  mutate(ultimo_registro_cargo =str_squish(  str_remove_all(ultimo_registro_cargo,"-|PAS(A|E) A.+"))  )|> 
+  mutate(ultimo_registro_cargo = str_extract(ultimo_registro_cargo,"\\d\\d/\\d\\d/\\d{4}$")) |> 
+  select(-periodo) |> 
+  mutate(primer_registro_cargo = as.character( dmy(primer_registro_cargo)) ) |> 
+  mutate(ultimo_registro_cargo = as.character( dmy(ultimo_registro_cargo)) )->auxiliar_empleados_locacion_jefatura_gabinete_2022
+  
+#2021
+external_empleados_locacion_jefatura_gabinete_2021 |> 
+  select(`ORGANISMO-EMPLEADOR`,DEPENDENCIA,`PERÍODO DE CONTRATACIÓN 2021`, D.N.I., `OBJETO DE CONTRATACION
+`) |> 
+   rename(organismo =`ORGANISMO-EMPLEADOR`,estructura = DEPENDENCIA,dni = D.N.I.,periodo=`PERÍODO DE CONTRATACIÓN 2021`, cargo = `OBJETO DE CONTRATACION
+`) |> 
+  mutate(categoria_cargo =str_extract(cargo,"II|I")) |> 
+  mutate(cargo = str_remove_all(cargo,"II|I")) |> 
+  mutate(cargo = str_remove_all(cargo,"-|\n")) |> 
+  mutate(dni = as.character(dni)) |> 
+   mutate(periodo = str_remove_all(periodo,"ALTA CONTRATO|\n|MODIF\\.")) |> 
+  mutate(primer_registro_cargo = str_extract(periodo,"\\d\\d/\\d\\d/\\d{4}")) |>
+  mutate(ultimo_registro_cargo = str_extract(periodo,"AL.+")) |> 
+  mutate(ultimo_registro_cargo =str_squish(  str_remove_all(ultimo_registro_cargo,"-|PAS(A|E) A.+"))  )|> 
+  mutate(ultimo_registro_cargo = str_extract(ultimo_registro_cargo,"\\d\\d/\\d\\d/\\d{4}$")) |> 
+   select(-periodo)|> 
+  mutate(primer_registro_cargo = as.character( dmy(primer_registro_cargo)) ) |> 
+  mutate(ultimo_registro_cargo = as.character( dmy(ultimo_registro_cargo)) )->auxiliar_empleados_locacion_jefatura_gabinete_2021
+  
+
+#2020
+external_empleados_locacion_jefatura_gabinete_2020 |> 
+  select(`ORGANISMO-EMPLEADOR`,DEPENDENCIA,`PERÍODO DE CONTRATACIÓN 2020`, D.N.I., `OBJETO DE CONTRATACION`) |> 
+   rename(organismo =`ORGANISMO-EMPLEADOR`,estructura = DEPENDENCIA,dni = D.N.I.,periodo=`PERÍODO DE CONTRATACIÓN 2020`, cargo = `OBJETO DE CONTRATACION`) |> 
+   mutate(categoria_cargo =str_extract(cargo,"II|I")) |> 
+  mutate(cargo = str_remove_all(cargo,"II|I")) |> 
+  mutate(cargo = str_remove_all(cargo,"-|\n")) |> 
+  mutate(dni = as.character(dni)) |> 
+  mutate(periodo = str_remove_all(periodo,"ALTA CONTRATO|\n|MODIF\\.")) |> 
+  mutate(primer_registro_cargo = str_extract(periodo,"\\d\\d/\\d\\d/\\d{4}")) |>
+  mutate(ultimo_registro_cargo = str_extract(periodo,"AL.+")) |> 
+  mutate(ultimo_registro_cargo =str_squish(  str_remove_all(ultimo_registro_cargo,"-|PAS(A|E) A.+"))  )|> 
+  mutate(ultimo_registro_cargo = str_extract(ultimo_registro_cargo,"\\d\\d/\\d\\d/\\d{4}$")) |> 
+   select(-periodo)|> 
+  mutate(primer_registro_cargo = as.character( dmy(primer_registro_cargo)) ) |> 
+  mutate(ultimo_registro_cargo = as.character( dmy(ultimo_registro_cargo)) )->auxiliar_empleados_locacion_jefatura_gabinete_2020
+
+#2019
+colnames(external_empleados_locacion_jefatura_gabinete_2019) <- gsub("DTO\\. 1109/17", "", colnames(external_empleados_locacion_jefatura_gabinete_2019))
+colnames(external_empleados_locacion_jefatura_gabinete_2019) <- str_squish(colnames(external_empleados_locacion_jefatura_gabinete_2019))
+external_empleados_locacion_jefatura_gabinete_2019 |> 
+  select(`ORGANISMO-EMPLEADOR`, DEPENDENCIA, D.N.I., `OBJETO DE CONTRATACION`, `FECHA DE INICIO`, `FECHA FIN`) |> 
+   rename(organismo =`ORGANISMO-EMPLEADOR`,estructura = DEPENDENCIA,dni = D.N.I., cargo = `OBJETO DE CONTRATACION`, 
+          primer_registro_cargo =  `FECHA DE INICIO`, ultimo_registro_cargo =  `FECHA FIN`) |> 
+  mutate(ultimo_registro_cargo = as.character(ultimo_registro_cargo)) |> 
+  mutate(primer_registro_cargo = as.character(primer_registro_cargo))->auxiliar_empleados_locacion_jefatura_gabinete_2019
+  
+```
+
+```{r}
+#Unify
+auxiliar_empleados_locacion_jefatura_gabinete_2024 |> 
+  bind_rows(auxiliar_empleados_locacion_jefatura_gabinete_2023, auxiliar_empleados_locacion_jefatura_gabinete_2022, 
+            auxiliar_empleados_locacion_jefatura_gabinete_2021, auxiliar_empleados_locacion_jefatura_gabinete_2020, auxiliar_empleados_locacion_jefatura_gabinete_2019)->auxiliar_empleados_locacion_jefatura_gabinete_2019_2024
+
+auxiliar_empleados_locacion_jefatura_gabinete_2019_2024 |> 
+  arrange(primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(dni,primer_registro_cargo)->primeros_registros_jefatura_gabinete
+
+
+auxiliar_empleados_locacion_jefatura_gabinete_2019_2024 |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(-primer_registro_cargo) |> 
+  left_join(primeros_registros_jefatura_gabinete, by = "dni") |> 
+  mutate(nombre_completo = NA, apellido = NA, nombre= NA, fecha_nacimiento = NA,  legajo =NA, tipo_contratacion = "LOCACION", 
+         ingreso_cargo = NA, baja_cargo = NA, tipo_administracion  = NA, poder  = "EJECUTIVO", fuente = "PDI") |> 
+  relocate(dni,nombre_completo, apellido, nombre,fecha_nacimiento, cargo, legajo, categoria_cargo,
+           tipo_contratacion, organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo, ultimo_registro_cargo, tipo_administracion, poder, fuente)->processed_empleados_locacion_jefatura_2019_2024
+```
+
+```{r}
+#Certificaciones
+external_certificaciones_servicios_jefatura_gabinete_sep_2024 |> 
+  rename(nombre_completo = `Apellido y Nombre`, cuit = cuil, tipo_contratacion = convenio, categoria_cargo = escalafon, cargo = función, 
+         estructura = Dependencia) |> 
+  select(-`SECRETARIA/OTRO`,-`SUBSE/OTRO`)->auxiliar_certificaciones_servicios_jefatura_gabinete_sep_2024
+
+external_certificaciones_servicios_jefatura_gabinete_oct_2024 |> 
+  rename(nombre_completo = `Apellido y Nombre`, cuit = cuil, tipo_contratacion = convenio, categoria_cargo = escalafon, cargo = función, 
+         estructura = Dependencia)|> 
+  select(-`SECRETARIA/OTRO`,-`SUBSE/OTRO`)->auxiliar_certificaciones_servicios_jefatura_gabinete_oct_2024
+
+external_certificaciones_servicios_jefatura_gabinete_nov_2024 |> 
+  rename(nombre_completo = `Apellido y Nombre`, cuit = cuil, tipo_contratacion = convenio, categoria_cargo = escalafon, cargo = función, 
+         estructura = Dependencia)|> 
+  select(-`SECRETARIA/OTRO`,-`SUBSE/OTRO`)->auxiliar_certificaciones_servicios_jefatura_gabinete_nov_2024
+
+external_certificaciones_servicios_jefatura_gabinete_dec_2024 |> 
+  rename(nombre_completo = `Apellido y Nombre`, cuit = CUIL, tipo_contratacion = Convenio, categoria_cargo = Escalafón, 
+         estructura = Dependencia)|> 
+  select(-`SECRETARIA/OTRO`,-`SUBSE/OTRO`)->auxiliar_certificaciones_servicios_jefatura_gabinete_dec_2024
+
+bind_rows(auxiliar_certificaciones_servicios_jefatura_gabinete_sep_2024, auxiliar_certificaciones_servicios_jefatura_gabinete_oct_2024, 
+          auxiliar_certificaciones_servicios_jefatura_gabinete_nov_2024,auxiliar_certificaciones_servicios_jefatura_gabinete_dec_2024) |> 
+  mutate(primer_registro_cargo = case_when(
+    mes=="SEPTIEMBRE"~ "2024-09-01",
+    mes=="OCTUBRE"~ "2024-10-01",
+    mes=="NOVIEMBRE"~ "2024-11-01",
+    TRUE~ "2024-12-01"
+  )) |>
+  mutate(ultimo_registro_cargo = case_when(
+    mes=="SEPTIEMBRE"~ "2024-09-30",
+    mes=="OCTUBRE"~ "2024-10-31",
+    mes=="NOVIEMBRE"~ "2024-11-30",
+    TRUE~ "2024-12-31"
+  )) |> 
+  mutate(dni = str_remove_all(cuit,"^..|.$")) |> 
+  select(-mes, -cuit)->auxiliar_certificaciones_servicios_jefatura_gabinete_sep_dec_2024
+
+auxiliar_certificaciones_servicios_jefatura_gabinete_sep_dec_2024 |> 
+  arrange(desc(ultimo_registro_cargo)) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(dni, ultimo_registro_cargo)->auxiliar_ultimos_registros
+
+auxiliar_certificaciones_servicios_jefatura_gabinete_sep_dec_2024 |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(-ultimo_registro_cargo) |> 
+  left_join(auxiliar_ultimos_registros) |> 
+  mutate(nombre = str_remove_all(nombre_completo,".+,")) |> 
+  mutate(apellido = str_remove_all(nombre_completo,",.+")) |> 
+  mutate(tipo_contratacion = case_when(
+    str_detect(tipo_contratacion,"SINEP|TRANSITORIA|SUPERIORES")~"PLANTA TRANSITORIA",
+    TRUE ~ "LOCACION"
+  )) |> 
+  mutate(organismo = "JEFATURA DE GABINETE") |> 
+  mutate(fecha_nacimiento = NA,  legajo =NA, 
+         ingreso_cargo = NA, baja_cargo = NA, tipo_administracion  = NA, poder  = "EJECUTIVO", fuente = "PDI") |> 
+  relocate(dni,nombre_completo, apellido, nombre,fecha_nacimiento, cargo, legajo, categoria_cargo,
+           tipo_contratacion, organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo, ultimo_registro_cargo, tipo_administracion, poder, fuente) |> 
+  #Quitamos los que ta teniamos
+  anti_join(processed_empleados_locacion_jefatura_2019_2024 |> distinct(dni))->processed_empleados_certificaciones_jefatura_2024
+
+```
+
+
+#ECONOMIA SOCIAL
+```{r}
+external_empleados_locacion_min_capital_humano_secretaria_economia_social_dec_2023 |> 
+  rename(apellido = APELLIDO, nombre = NOMBRES, cuit = C.U.I.T, cargo = FUNCIÓN, categoria_cargo = NIVEL,
+         remuneracion = `U.R. MENSUALES`, estructura =ORGANISMO, firmante = `FIRMA AUTORIDAD`, 
+         dependencia = DEPENDENCIA, cuit_organismo = `CUIT DEL ORGANISMO`, objeto_contrato = `OBJETO DEL CONTRATO`, tareas = TAREAS, periodo = PERIODO
+         ) |> 
+   select(apellido, nombre, cuit, cargo, categoria_cargo, periodo, estructura) |> 
+  filter(!is.na(cuit)) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d{2}-|-\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  mutate(primer_registro_cargo =dmy( "01/12/2023") ) |> 
+  mutate(ultimo_registro_cargo = dmy("31/12/2023") ) |> 
+  select(-periodo)->interim_empleados_locacion_min_capital_humano_secretaria_economia_social_Dec_2023
+
+nombres_columnas<-c("apellido","nombre", "cuit","cargo","categoria_cargo","remuneracion","primer_registro_cargo","ultimo_registro_cargo","estructura","firmante","dependencia", "cuit_organismo","objeto","tareas","dni")
+
+bind_rows(external_empleados_locacion_min_capital_humano_secretaria_economia_social_4t_2024, external_empleados_locacion_min_capital_humano_secretaria_economia_social_3t_2024, 
+          external_empleados_locacion_min_capital_humano_secretaria_economia_social_2t_2024,external_empleados_locacion_min_capital_humano_secretaria_economia_social_1t_2024) |> 
+  mutate(dni = str_remove_all(C.U.I.T,"^\\d{2}-|-\\d$|- \\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->auxiliar_empleados_locacion_min_capital_humano_secretaria_economia_social_2024
+colnames(auxiliar_empleados_locacion_min_capital_humano_secretaria_economia_social_2024)<-nombres_columnas
+
+
+auxiliar_empleados_locacion_min_capital_humano_secretaria_economia_social_2024 |> 
+  arrange(primer_registro_cargo) |> 
+  select(dni, primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE)->auxiliar_primeros_registros_secretaria_economia_social
+
+auxiliar_empleados_locacion_min_capital_humano_secretaria_economia_social_2024 |> 
+  select(apellido, nombre, dni, cargo, categoria_cargo, primer_registro_cargo, ultimo_registro_cargo, estructura) |> 
+  arrange(desc(ultimo_registro_cargo)) |> 
+  select(-primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  left_join(auxiliar_primeros_registros_secretaria_economia_social) |> 
+  mutate(nombre_completo = paste(nombre, apellido), fecha_nacimiento = NA, legajo = NA, tipo_contratacion = "LOCACION",
+         organismo = "MINISTERIO DE CAPITAL HUMANO",
+         ingreso_cargo = NA, baja_cargo = NA, tipo_administracion = NA,
+         poder = "EJECUTIVO", fuente = "PDI") |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels)->processed_empleados_locacion_min_capital_humano_secretaria_economia_social_2024
+
+```
+
+
+# SECRETARIA FAMILIAR
+```{r}
+external_empleados_locacion_min_capital_humano_secretaria_familia_Dec_2023 |> 
+  rename(apellido = APELLIDO, nombre = NOMBRES, cuit = C.U.I.T, cargo = FUNCIÓN, categoria_cargo = NIVEL,
+         remuneracion = `U.R. MENSUALES`, estructura =ORGANISMO, firmante = `FIRMA AUTORIDAD`, 
+         dependencia = DEPENDENCIA, cuit_organismo = `CUIT DEL ORGANISMO`, objeto_contrato = `OBJETO DEL CONTRATO`, tareas = TAREAS, periodo = PERIODO
+         ) |> 
+  select(apellido, nombre, cuit, cargo, categoria_cargo, periodo, estructura) |> 
+  filter(!is.na(cuit)) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d{2}|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  mutate(primer_registro_cargo =dmy( "01/12/2023") ) |> 
+  mutate(ultimo_registro_cargo = dmy("31/12/2023") ) |> 
+  select(-periodo)->interim_empleados_locacion_min_capital_humano_secretaria_familia_Dec_2023
+
+nombres_columnas<-c("apellido","nombre", "cuit","cargo","categoria_cargo","remuneracion","primer_registro_cargo","ultimo_registro_cargo","dependencia", "firmante","estructura","cuit_organismo","objeto","tareas")
+
+colnames(external_empleados_locacion_min_capital_humano_secretaria_familia_Ene_Mar_2024)<-nombres_columnas
+external_empleados_locacion_min_capital_humano_secretaria_familia_Ene_Mar_2024 |> 
+select(apellido, nombre, cuit, cargo, categoria_cargo, primer_registro_cargo, ultimo_registro_cargo, estructura) |> 
+   mutate(dni = str_remove_all(cuit,"^\\d{2}|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) ->interim_empleados_locacion_min_capital_humano_secretaria_familia_Ene_Mar_2024
+
+colnames(external_empleados_locacion_min_capital_humano_secretaria_familia_Abr_Jun_2024)<-nombres_columnas
+external_empleados_locacion_min_capital_humano_secretaria_familia_Abr_Jun_2024|> 
+select(apellido, nombre, cuit, cargo, categoria_cargo, primer_registro_cargo, ultimo_registro_cargo, estructura) |> 
+   mutate(dni = str_remove_all(cuit,"^\\d{2}|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) ->interim_empleados_locacion_min_capital_humano_secretaria_familia_Abr_Jun_2024
+
+colnames(external_empleados_locacion_min_capital_humano_secretaria_familia_Jul_Sept_2024)<-nombres_columnas
+external_empleados_locacion_min_capital_humano_secretaria_familia_Jul_Sept_2024|> 
+select(apellido, nombre, cuit, cargo, categoria_cargo, primer_registro_cargo, ultimo_registro_cargo, estructura) |> 
+   mutate(dni = str_remove_all(cuit,"^\\d{2}|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) ->interim_empleados_locacion_min_capital_humano_secretaria_familia_Jul_Sept_2024
+
+colnames(external_empleados_locacion_min_capital_humano_secretaria_familia_Oct_Dec_2024)<-nombres_columnas
+external_empleados_locacion_min_capital_humano_secretaria_familia_Oct_Dec_2024|> 
+select(apellido, nombre, cuit, cargo, categoria_cargo, primer_registro_cargo, ultimo_registro_cargo, estructura) |> 
+   mutate(dni = str_remove_all(cuit,"^\\d{2}|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->interim_empleados_locacion_min_capital_humano_secretaria_familia_Oct_Dec_2024
+
+
+bind_rows(interim_empleados_locacion_min_capital_humano_secretaria_familia_Oct_Dec_2024, interim_empleados_locacion_min_capital_humano_secretaria_familia_Jul_Sept_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_familia_Abr_Jun_2024, interim_empleados_locacion_min_capital_humano_secretaria_familia_Ene_Mar_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_familia_Dec_2023)->auxiliar_empleados_locacion_min_capital_humano_secretaria_familia
+
+auxiliar_empleados_locacion_min_capital_humano_secretaria_familia |> 
+  arrange(primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(dni, primer_registro_cargo)->auxiliar_ingresos_secretaria_familiar
+
+auxiliar_empleados_locacion_min_capital_humano_secretaria_familia |> 
+  arrange(desc(ultimo_registro_cargo)) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(-primer_registro_cargo) |> 
+  left_join(auxiliar_ingresos_secretaria_familiar) |> 
+  mutate(nombre_completo = paste(nombre, apellido), fecha_nacimiento = NA, legajo = NA, tipo_contratacion = "LOCACION",
+         organismo = "MINISTERIO DE CAPITAL HUMANO",
+         ingreso_cargo = NA, baja_cargo = NA, tipo_administracion = NA,
+         poder = "EJECUTIVO", fuente = "PDI") |> 
+  select(-cuit) |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels) ->processed_empleados_locacion_min_capital_humano_secretaria_familia_2024
+```
+
+#EDUCACION
+```{r}
+external_empleados_locacion_min_capital_humano_secretaria_educacion_Dec_2023 |> 
+  rename(cuit = `CUIT del contratista`, nombre_completo = `Apellido y Nombre del Contratado`,
+         cargo = FUNCION, categoria_cargo = NIVEL, remuneracion = `UR MENSUAL`,
+         primer_registro_cargo = PERÍODO, estructura = `Dependencia o área que solicitó el servicio`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = `Detalle de los servicios prestados`) |> 
+  select(cuit, nombre_completo, cargo, categoria_cargo, primer_registro_cargo, estructura) |> 
+  filter(!is.na(cuit)) |> 
+  mutate(primer_registro_cargo = "01/12/2023") |> 
+  mutate(ultimo_registro_cargo = "31/12/2023") |> 
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$"))->interim_empleados_locacion_min_capital_humano_secretaria_educacion_Dec_2023
+
+external_empleados_locacion_min_capital_humano_secretaria_educacion_ene_feb_2024|> 
+  rename(cuit = `CUIT del contratista`, apellido = APELLIDO, nombre = NOMBRE,
+         cargo = FUNCIÓN, categoria_cargo = NIVEL, remuneracion = `U.R. MENSUAL`,
+         primer_registro_cargo = `Fecha de inicio del contrato`,ultimo_registro_cargo =`Fecha de finalización del contrato`, estructura = `Dependencia`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = Tareas) |>  
+  select(cuit, apellido, nombre, cargo, categoria_cargo, primer_registro_cargo,ultimo_registro_cargo, estructura) |> 
+   filter(!is.na(cuit)) |>  
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$")) |> 
+  mutate(primer_registro_cargo=format(primer_registro_cargo, "%d/%m/%Y")) |> 
+  mutate(nombre_completo = paste(nombre, apellido))->interim_empleados_locacion_min_capital_humano_secretaria_educacion_ene_feb_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_educacion_mar_2024 |> 
+   rename(cuit = `CUIT del contratista`, apellido = APELLIDO, nombre = NOMBRE,
+         cargo = FUNCIÓN, categoria_cargo = NIVEL, remuneracion = `U.R. MENSUAL`,
+         primer_registro_cargo = `Fecha de inicio del contrato`,ultimo_registro_cargo =`Fecha de finalización del contrato`, estructura = `Dependencia`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = Tareas) |>  
+  select(cuit, apellido, nombre, cargo, categoria_cargo, primer_registro_cargo,ultimo_registro_cargo, estructura) |> 
+   filter(!is.na(cuit)) |>  
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$")) |> 
+  mutate(primer_registro_cargo="01/03/2024") |> 
+  mutate(nombre_completo = paste(nombre, apellido))->interim_empleados_locacion_min_capital_humano_secretaria_educacion_mar_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_educacion_abr_jun_2024 |> 
+   rename(cuit = `CUIT del contratista`, apellido = APELLIDO, nombre = NOMBRE,
+         cargo = FUNCIÓN, categoria_cargo = NIVEL, remuneracion = `U.R. MENSUAL`,
+         primer_registro_cargo = `Fecha de inicio del contrato`,ultimo_registro_cargo =`Fecha de finalización del contrato`, estructura = `Dependencia`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = Tareas) |>  
+  select(cuit, apellido, nombre, cargo, categoria_cargo, primer_registro_cargo,ultimo_registro_cargo, estructura) |> 
+   filter(!is.na(cuit)) |>  
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$")) |> 
+  mutate(nombre_completo = paste(nombre, apellido))|> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  mutate(primer_registro_cargo="01/04/2024")->interim_empleados_locacion_min_capital_humano_secretaria_educacion_abr_jun_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_educacion_jul_sep_2024 |> 
+   rename(cuit = `CUIT del contratista`, apellido = APELLIDO, nombre = NOMBRE,
+         cargo = FUNCIÓN, categoria_cargo = NIVEL, remuneracion = `U.R. MENSUAL`,
+         primer_registro_cargo = `Fecha de inicio del contrato`,ultimo_registro_cargo =`Fecha de finalización del`, estructura = `Dependencia`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = Tareas) |>  
+  select(cuit, apellido, nombre, cargo, categoria_cargo, primer_registro_cargo,ultimo_registro_cargo, estructura) |> 
+   filter(!is.na(cuit)) |>  
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$")) |> 
+  mutate(nombre_completo = paste(nombre, apellido))|> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  mutate(primer_registro_cargo="01/07/2024")->interim_empleados_locacion_min_capital_humano_secretaria_educacion_jul_sep_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_educacion_oct_dec_2024 |> 
+   rename(cuit = `CUIT del contratista`, apellido = APELLIDO, nombre = NOMBRE,
+         cargo = FUNCIÓN, categoria_cargo = NIVEL, remuneracion = `U.R. MENSUAL`,
+         primer_registro_cargo = `Fecha de inicio del contrato`,ultimo_registro_cargo =`Fecha de finalización del contrato`, estructura = `Dependencia`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = Tareas) |>  
+  select(cuit, apellido, nombre, cargo, categoria_cargo, primer_registro_cargo,ultimo_registro_cargo, estructura) |> 
+   filter(!is.na(cuit)) |>  
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$")) |> 
+  mutate(nombre_completo = paste(nombre, apellido))|> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  mutate(primer_registro_cargo="01/10/2024")->interim_empleados_locacion_min_capital_humano_secretaria_educacion_oct_dec_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_educacion_altas_2024 |> 
+   rename(cuit = `CUIT del contratista`, apellido = APELLIDO, nombre = NOMBRE,
+         cargo = FUNCIÓN, categoria_cargo = NIVEL, remuneracion = `U.R. MENSUAL`,
+         primer_registro_cargo = `Fecha de inicio del contrato`,ultimo_registro_cargo =`Fecha de`, estructura = `Dependencia`,
+         firmante = `Nombre del funcionario que firmó el contrato`, objeto = `Objeto del contrato`, tareas = Tareas) |>  
+  select(cuit, apellido, nombre, cargo, categoria_cargo, primer_registro_cargo,ultimo_registro_cargo, estructura) |> 
+   filter(!is.na(cuit)) |>  
+  mutate(cuit = str_remove_all(cuit,"-")) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d\\d|\\d$") ) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  mutate(estructura = str_remove_all(estructura,"\\sDE$")) |> 
+  mutate(nombre_completo = paste(nombre, apellido))|> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  mutate(primer_registro_cargo=format(primer_registro_cargo, "%d/%m/%Y")) |> 
+  mutate(primer_registro_cargo = verify_date(primer_registro_cargo))->interim_empleados_locacion_min_capital_humano_secretaria_educacion_altas_2024
+
+
+
+```
+
+```{r}
+
+bind_rows(
+  
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_Dec_2023,
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_ene_feb_2024,
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_mar_2024,
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_abr_jun_2024,
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_jul_sep_2024,
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_oct_dec_2024,
+  interim_empleados_locacion_min_capital_humano_secretaria_educacion_altas_2024
+) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(dni, primer_registro_cargo)->auxiliar_primeros_registros_min_capital_humano_secretaria_educacion
+
+
+
+bind_rows(interim_empleados_locacion_min_capital_humano_secretaria_educacion_oct_dec_2024, 
+interim_empleados_locacion_min_capital_humano_secretaria_educacion_jul_sep_2024,
+interim_empleados_locacion_min_capital_humano_secretaria_educacion_abr_jun_2024, 
+interim_empleados_locacion_min_capital_humano_secretaria_educacion_mar_2024,
+interim_empleados_locacion_min_capital_humano_secretaria_educacion_ene_feb_2024, 
+interim_empleados_locacion_min_capital_humano_secretaria_educacion_Dec_2023,
+interim_empleados_locacion_min_capital_humano_secretaria_educacion_altas_2024) |> 
+mutate(fecha_nacimiento = NA, legajo = NA, tipo_contratacion = "LOCACION", organismo = "MINISTERIO DE CAPITAL HUMANO",
+       ingreso_cargo = NA, baja_cargo = NA, tipo_administracion = NA, poder = "EJECUTIVO",fuente = "PDI") |> 
+  select(-primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  left_join(auxiliar_primeros_registros_min_capital_humano_secretaria_educacion) |> 
+  mutate(primer_registro_cargo = dmy(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = dmy(ultimo_registro_cargo)) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente)->interim_empleados_locacion__min_capital_humano_secretaria_educacion_2024
+
+```
+
+```{r}
+external_empleados_locacion_min_capital_humano_secretaria_educacion_2024_complemento |> 
+  filter(!is.na(CUIT)) |> 
+  rename(cuit = CUIT, apellido= Apellido, nombre = NOMBRE, cargo = FUNCION,categoria_cargo = NIVEL,
+         remuneracion = `U.R. MENSUAL`, primer_registro_cargo = desde, ultimo_registro_cargo = hasta,
+         estructura = `Area que Desempeña Actividades`, funcionario = `Funcionario que certifica servicios`,
+         objeto = `Objeto del Contrato`, tareas = TAREAS) |> 
+  select(cuit, apellido, nombre, cargo, categoria_cargo, estructura, primer_registro_cargo, ultimo_registro_cargo) |> 
+  mutate(nombre_completo =paste(nombre, apellido)) |> 
+  mutate(dni = str_remove_all(cuit,"^\\d{2}-|-\\d$")) |> 
+  mutate(primer_registro_cargo = format(primer_registro_cargo,"%d/%m/%Y")) |> 
+  mutate(primer_registro_cargo = verify_date(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = case_when(
+    ultimo_registro_cargo=="45303"~ "01/12/2024",
+    TRUE ~ ultimo_registro_cargo
+  )) |> 
+  mutate(primer_registro_cargo = dmy(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = dmy(ultimo_registro_cargo)) |> 
+  select(-cuit) |> 
+  mutate(fecha_nacimiento = NA, legajo = NA, tipo_contratacion = "LOCACION", organismo = "MINISTERIO DE CAPITAL HUMANO", tipo_administracion = NA,
+        ingreso_cargo = NA, baja_cargo = NA,  poder ="EJECUTIVO", fuente ="PDI") |> 
+  arrange(desc(ultimo_registro_cargo)) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels)->auxiliar_empleados_locacion_min_capital_humano_secretaria_educacion_2024_complemento
+
+auxiliar_empleados_locacion_min_capital_humano_secretaria_educacion_2024_complemento |> 
+  arrange(primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(dni, primer_registro_cargo)->auxiliar_primeros_registros_min_capital_humano_secretaria_educacion_complemento
+
+auxiliar_empleados_locacion_min_capital_humano_secretaria_educacion_2024_complemento |>
+  select(-primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  left_join(auxiliar_primeros_registros_min_capital_humano_secretaria_educacion_complemento, by = "dni") |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente)->interim_empleados_locacion__min_capital_humano_secretaria_educacion_2024_complemento
+  
+bind_rows(interim_empleados_locacion__min_capital_humano_secretaria_educacion_2024, 
+          interim_empleados_locacion__min_capital_humano_secretaria_educacion_2024_complemento)->processed_empleados_locacion__min_capital_humano_secretaria_educacion_2024
+  
+```
+
+
+
+#CULTURA Y LEGALES
+```{r}
+external_empleados_locacion_min_capital_humano_cultura_legal_asesores_dec_2023 |> 
+  rename(nombre = NOMBRE, apellido = APELLIDO,dni = DNI, cuit = CUIT, periodo = `PERÍODO MINISTERIO CAPITAL HUMANO 10-12-2023 AL 31-12-2023`, 
+         cargo = `FUNCION / RANGO`, remuneracion = URS, estructura = `UNIDAD 1`,tareas = TAREAS) |> 
+  mutate(nombre_completo = paste(nombre, apellido), tipo_contratacion = "LOCACION",organismo = "MINISTERIO DE CAPITAL HUMANO") |> 
+  select(-tareas, -remuneracion, -periodo, -cuit) |> 
+  mutate(primer_registro_cargo = "2023-12-01") |> 
+  mutate(ultimo_registro_cargo = "2023-12-31") |> 
+  mutate(primer_registro_cargo = as.Date(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = as.Date(ultimo_registro_cargo)) |> 
+  mutate(dni = as.character(dni)) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels)->auxiliar1
+  
+```
+
+```{r}
+external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024 |> 
+  select(-1) |> 
+  rename(nombre = NOMBRE, apellido = APELLIDO, dni = DNI, cuit = CUIT,
+         primer_registro_cargo=DESDE, ultimo_registro_cargo = HASTA, cargo = `FUNCION / RANGO`, remuneracion = URS,
+         estructura =  `DEPENDENCIA 2024`, unidad =`UNIDAD 1`, tareas = TAREAS) |> 
+  mutate(nombre_completo = paste(nombre, apellido), tipo_contratacion = "LOCACION",organismo = "MINISTERIO DE CAPITAL HUMANO") |> 
+  select(-remuneracion, - cuit, -unidad, -tareas) |>
+  mutate(primer_registro_cargo = ammend_dates(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = ammend_dates(ultimo_registro_cargo)) |> 
+  mutate(primer_registro_cargo = dmy(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = dmy(ultimo_registro_cargo)) |> 
+  mutate(baja_cargo = case_when(
+    ultimo_registro_cargo<as.Date("2024-09-30")~ ultimo_registro_cargo,
+    TRUE~NA
+  )) |> 
+  select(-`SITUACIÓN AL 30/09/2024`) |>
+  mutate(estaba_en_2023 = dni%in%auxiliar1$dni) |> 
+  mutate(dni = as.character(dni)) |> 
+  mutate(primer_registro_cargo = case_when(
+    estaba_en_2023~ as.Date("2023-12-01"),
+    TRUE ~  primer_registro_cargo
+  )) |> 
+  select(-estaba_en_2023) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels)->auxiliar2
+```
+
+
+```{r}
+bind_rows(auxiliar2,auxiliar1) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  mutate(fecha_nacimiento = NA, legajo = NA, categoria_cargo = NA, ingreso_cargo = NA, tipo_administracion = NA, poder = "EJECUTIVO", fuente = "PDI") |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente)->interim_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024
+```
+
+
+
+```{r}
+external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_4t |> 
+  bind_rows(external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_3t,
+            external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_2t,
+            external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_1t) |> 
+  select(-6) |> 
+  rename(apellido = APELLIDO, nombre = NOMBRES, cuit = C.U.I.T, cargo = FUNCIÓN, jerarquia = NIVEL, primer_registro_cargo = `TIEMPO DETERMINADO DESDE:`, ultimo_registro_cargo = `TIEMPO DETERMINADO HASTA:`,
+estructura = DEPENDENCIA, firma = `FIRMA AUTORIDAD`, organismo = ORGANISMO, cuil_organismo = `CUIL DEL ORGANISMO`,objeto=
+`OBJETO DEL CONTRATO`, tareas = TAREAS) |> 
+  select( -jerarquia,-firma,-cuil_organismo, -objeto, -tareas) |> 
+
+  mutate(dni = str_remove_all(cuit, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit, -primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE)->auxiliar3
+
+external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_1t |> 
+  bind_rows(external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_2t,
+            external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_3t,
+            external_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento_4t) |> 
+  select(C.U.I.T, `TIEMPO DETERMINADO DESDE:`) |> 
+  rename(cuit = C.U.I.T, primer_registro_cargo =`TIEMPO DETERMINADO DESDE:` ) |> 
+   mutate(dni = str_remove_all(cuit, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0")) |> 
+  select(-cuit) |> 
+  distinct(dni, .keep_all = TRUE)->auxiliar_primeros_registros
+
+auxiliar3 |> 
+  left_join(auxiliar_primeros_registros, by = "dni") |> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  mutate(fecha_nacimiento = NA, legajo = NA, categoria_cargo = NA, tipo_contratacion = "LOCACION", ingreso_cargo = NA, baja_cargo = NA, tipo_administracion = NA, poder = "EJECUTIVO", fuente = "PDI") |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente)->interim_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento
+  
+  
+```
+
+
+```{r}
+interim_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024 |> 
+  bind_rows(interim_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024_complemento)->auxiliar4
+
+
+#Verificamos las fechas de los ultimos y primeros registros
+search_record_date( auxiliar4$dni, "ULTIMO REGISTRO", auxiliar4) |> distinct(dni, .keep_all = TRUE)->ultimos_registros_df
+search_record_date( auxiliar4$dni, "PRIMER REGISTRO", auxiliar4)|> distinct(dni, .keep_all = TRUE)->primeros_registros_df
+
+
+auxiliar4 |> 
+  left_join(primeros_registros_df) |> 
+  select(-primer_registro_cargo) |> 
+  rename(primer_registro_cargo = registro) |> 
+  left_join(ultimos_registros_df) |> 
+  select(-ultimo_registro_cargo) |> 
+  rename(ultimo_registro_cargo = registro) |> 
+  distinct(dni,  .keep_all = TRUE) |> 
+  mutate(primer_registro_cargo = as.Date(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = as.Date(ultimo_registro_cargo)) |> 
+  mutate(categoria_cargo = str_extract(cargo,"(?<=\\s)(II|I)")) |> 
+  mutate(cargo = str_remove(cargo,"(?<=\\s)(II|I)")) |> 
+  mutate(cargo = str_squish(cargo)) |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente)->processed_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024
+```
+
+
+
+
+#Secretaria trabajo
+```{r}
+external_empleados_locacion_min_capital_humano_secretaria_trabajo_1t_2024 |> 
+  rename(contenido ='...1') |> 
+  mutate(referencia =rep(c("legajo","apellido","nombre", "cuil","alta","baja","unidad","funcion","detalle","firmante","remuneracion","objeto","forma_pago"), times=31)) |> 
+  mutate(row_id = rep(1:31, each=13)) |> 
+  pivot_wider(id_cols = row_id,names_from = referencia, values_from = contenido) |> 
+  filter(row_id!=1) |> 
+  select(-row_id) |> 
+  select(-detalle, -firmante,-remuneracion, -objeto, -forma_pago) |> 
+  mutate(alta = ammend_dates(alta)) |> 
+  mutate(alta = verify_date(alta)) |> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  rename(primer_registro_cargo = alta, ultimo_registro_cargo = baja, estructura = unidad, cargo=funcion) |> 
+  mutate(dni = str_remove_all(cuil, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->interim_empleados_locacion_min_capital_humano_secretaria_trabajo_1t_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_trabajo_2t_2024 |> 
+  rename(contenido ='...1') |> 
+  mutate(referencia =rep(c("legajo","apellido","nombre", "cuil","alta","baja","unidad","funcion","detalle","firmante","remuneracion","objeto","forma_pago"), times=15)) |> 
+  mutate(row_id = rep(1:15, each=13)) |> 
+  pivot_wider(id_cols = row_id,names_from = referencia, values_from = contenido) |> 
+  filter(row_id!=1) |> 
+  select(-row_id) |> 
+  select(-detalle, -firmante,-remuneracion, -objeto, -forma_pago) |> 
+  mutate(alta = ammend_dates(alta)) |> 
+  mutate(alta = verify_date(alta)) |> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  rename(primer_registro_cargo = alta, ultimo_registro_cargo = baja, estructura = unidad, cargo=funcion) |> 
+  mutate(dni = str_remove_all(cuil, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->interim_empleados_locacion_min_capital_humano_secretaria_trabajo_2t_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_trabajo_3t_2024 |> 
+  rename(contenido ='...1') |> 
+  mutate(referencia =rep(c("legajo","apellido","nombre", "cuil","alta","baja","unidad","funcion","detalle","firmante","remuneracion","objeto","forma_pago"), times=23)) |> 
+  mutate(row_id = rep(1:23, each=13)) |> 
+  pivot_wider(id_cols = row_id,names_from = referencia, values_from = contenido) |> 
+  filter(row_id!=1) |> 
+  select(-row_id) |> 
+  select(-detalle, -firmante,-remuneracion, -objeto, -forma_pago) |> 
+  mutate(alta = ammend_dates(alta)) |> 
+  mutate(alta = verify_date(alta)) |> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  rename(primer_registro_cargo = alta, ultimo_registro_cargo = baja, estructura = unidad, cargo=funcion) |>
+  mutate(ultimo_registro_cargo  = ammend_dates(ultimo_registro_cargo )) |> 
+  mutate(ultimo_registro_cargo = verify_date(ultimo_registro_cargo)) |> 
+  mutate(dni = str_remove_all(cuil, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->interim_empleados_locacion_min_capital_humano_secretaria_trabajo_3t_2024
+
+external_empleados_locacion_min_capital_humano_secretaria_trabajo_4t_2024 |> 
+  rename(contenido ='...1') |> 
+  mutate(referencia =rep(c("legajo","apellido","nombre", "cuil","alta","baja","unidad","funcion","detalle","firmante","remuneracion","objeto","forma_pago"), times=28)) |> 
+  mutate(row_id = rep(1:28, each=13)) |> 
+  pivot_wider(id_cols = row_id,names_from = referencia, values_from = contenido) |> 
+  filter(row_id!=1) |> 
+  select(-row_id) |> 
+  select(-detalle, -firmante,-remuneracion, -objeto, -forma_pago) |> 
+  mutate(alta = ammend_dates(alta)) |> 
+  mutate(alta = verify_date(alta)) |> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  rename(primer_registro_cargo = alta, ultimo_registro_cargo = baja, estructura = unidad, cargo=funcion) |> 
+  mutate(dni = str_remove_all(cuil, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->interim_empleados_locacion_min_capital_humano_secretaria_trabajo_4t_2024
+
+
+external_empleados_locacion_min_capital_humano_secretaria_trabajo_dec_2023 |> 
+  rename(contenido ='...1') |> 
+  mutate(referencia =rep(c("legajo","apellido","nombre", "cuil","alta","baja","unidad","funcion","detalle","firmante","remuneracion","objeto","forma_pago"), times=46)) |> 
+  mutate(row_id = rep(1:46, each=13)) |> 
+  pivot_wider(id_cols = row_id,names_from = referencia, values_from = contenido) |> 
+  filter(row_id!=1) |> 
+  select(-row_id) |> 
+  select(-detalle, -firmante,-remuneracion, -objeto, -forma_pago) |> 
+  mutate(alta = ammend_dates(alta)) |> 
+  mutate(alta = verify_date(alta)) |> 
+  mutate(nombre_completo = paste(nombre, apellido)) |> 
+  rename(primer_registro_cargo = alta, ultimo_registro_cargo = baja, estructura = unidad, cargo=funcion) |> 
+  mutate(dni = str_remove_all(cuil, "^\\d\\d|\\d$")) |> 
+  mutate(dni = str_remove_all(dni,"^0"))->interim_empleados_locacion_min_capital_humano_secretaria_trabajo_dec_2023
+```
+
+```{r}
+bind_rows(interim_empleados_locacion_min_capital_humano_secretaria_trabajo_dec_2023,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_1t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_2t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_3t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_4t_2024) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  select(dni, primer_registro_cargo)->auxiliar_primeros_registros_min_capital_humano_secretaria_trabajo
+
+
+bind_rows(interim_empleados_locacion_min_capital_humano_secretaria_trabajo_4t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_3t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_2t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_1t_2024,
+          interim_empleados_locacion_min_capital_humano_secretaria_trabajo_dec_2023) |> 
+  select(-primer_registro_cargo) |> 
+  distinct(dni, .keep_all = TRUE) |> 
+  left_join(auxiliar_primeros_registros_min_capital_humano_secretaria_trabajo, by = "dni") |> 
+  mutate(categoria_cargo = str_extract(cargo,"(?<=\\s)(II|I)")) |> 
+  mutate(cargo = str_remove(cargo,"(?<=\\s)(II|I)")) |> 
+  mutate(cargo = str_squish(cargo)) |> 
+  mutate(fecha_nacimiento = NA,tipo_contratacion = "LOCACION",organismo = "MINISTERIO DE CAPITAL HUMANO",
+         ingreso_cargo = NA, baja_cargo =NA, tipo_administracion = NA, poder = "EJECUTIVO", fuente = "PDI" ) |> 
+  select(-cuil) |> 
+  mutate(primer_registro_cargo = dmy(primer_registro_cargo)) |> 
+  mutate(ultimo_registro_cargo = dmy(ultimo_registro_cargo)) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, str_squish) |> 
+  mutate_if(is.character, replace_accented_vowels) |> 
+  relocate(dni, nombre_completo, apellido, nombre, fecha_nacimiento, cargo, legajo, categoria_cargo, tipo_contratacion,organismo, estructura, ingreso_cargo, baja_cargo, primer_registro_cargo,ultimo_registro_cargo, tipo_administracion, poder, fuente)->processed_empleados_locacion_min_capital_humano_secretaria_trabajo_2024
+```
+
+```{r}
+bind_rows(processed_empleados_locacion__min_capital_humano_secretaria_educacion_2024,
+          processed_empleados_locacion_min_capital_humano_cultura_legal_asesores_2024,
+          processed_empleados_locacion_min_capital_humano_secretaria_economia_social_2024,
+          processed_empleados_locacion_min_capital_humano_secretaria_trabajo_2024,
+          processed_empleados_locacion_min_capital_humano_secretaria_familia_2024
+          ) |> 
+  distinct(dni, .keep_all = TRUE)->processed_empleados_locacion_min_capital_humano_2024
+```
+
+#Save
+
+```{r}
+write_csv(processed_empleados_locacion_min_capital_humano_2024,"../../../data/interim/staff/interim_empleados_locacion_min_capital_humano_2024.csv")
+drive_update(as_id("1d9ahH-uOomyX3akARfcF0o23oR-Jw-59"),"../../../data/interim/staff/interim_empleados_locacion_min_capital_humano_2024.csv")
+file.remove("../../../data/interim/staff/interim_empleados_locacion_min_capital_humano_2024.csv")
+
+write_csv(processed_empleados_locacion_jefatura_2019_2024,"../../../data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
+drive_update(as_id("1ReNNYlFkrCHkMgzarWmLJmh5vD-Fa8Ck"),"../../../data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
+file.remove("../../../data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
+
+write_csv(processed_empleados_certificaciones_jefatura_2024,"../../../data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
+drive_update(as_id("1VIATAXIijRGlpgStc5gJmK9D20Wzt-dc"),"../../../data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
+file.remove("../../../data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
+
+```
+
+

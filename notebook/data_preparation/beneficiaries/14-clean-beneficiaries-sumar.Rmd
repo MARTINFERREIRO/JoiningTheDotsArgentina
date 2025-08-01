@@ -1,0 +1,494 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+
+```{r}
+#Sumar
+file_url<-"https://drive.google.com/uc?export=download&id=1aTCxmsxfZ0CCiBefj-0aDarqAiBU1Io7"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep=";", header = FALSE)->external_beneficiarios_sumar_2019
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1Brx7VfrmzNFCWqQAaYIGH8ywUwK-nPuV"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep=";", header = FALSE)->external_beneficiarios_sumar_2020
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1GPQt1VpnMS8wrS5IWgVYXpfFsfNS8GvS"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep=";", header = FALSE)->external_beneficiarios_sumar_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1OFGnZIBG4l4N4iqEWFuwHujxyWD6NinB"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep=";", header = FALSE)->external_beneficiarios_sumar_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1UPEBMB5oe-Pk3x49bSzAYpgBWHRKYUeI"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep=";", header = FALSE)->external_beneficiarios_sumar_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1NXZaXlkk7bljEajLgCjsiBXWQ2d7-Bae"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path, sep=";", header = FALSE)->external_beneficiarios_sumar_2024
+file.remove( file_content$local_path)
+```
+
+
+#DATA
+
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni_pep))->processed_peps
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Empleados
+file_url<-"https://drive.google.com/uc?export=download&id=1y0jXMd3jAnDetdp1fr-jXBOIeuhgSFUK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni))->processed_empleados_ejecutivo
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1ng8ZeDJrLiUq9DcR82CYBg4vlGU2TDxH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_judicial
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1OtarWp_Yxf8Lj2paATMot5f2uAC3rAWL"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_legislativo
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Contributions
+file_url<-"https://drive.google.com/uc?export=download&id=1cK0lrE-MzjF1dZav_-8e9Q11Q8OHLoSb"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni_aportante=as.character(dni_aportante))->processed_contributions_2011_2025
+file.remove( file_content$local_path)
+```
+
+#Auxiliary
+```{r}
+processed_contributions_2011_2025 |> 
+  distinct(dni_aportante) |> 
+  rename(doc=dni_aportante)->dnis_aportantes
+
+processed_peps |> 
+  distinct(dni_pep) |> 
+  rename(doc = dni_pep)->dnis_peps
+
+bind_rows(processed_empleados_ejecutivo, processed_empleados_judicial, processed_empleados_legislativo) |> 
+  distinct(dni) |> 
+  rename(doc = dni)->dnis_empleados
+```
+
+
+#Matching
+
+
+
+```{r}
+nombres_columnas<-c("nombre","apellido","clase_doc","tipo_doc","doc","fecha_nacimiento","apariciones")
+colnames(external_beneficiarios_sumar_2019)<-nombres_columnas
+#2019
+
+#Peps
+external_beneficiarios_sumar_2019 |> 
+  #select(doc, apariciones) |> 
+  inner_join(dnis_peps) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2019") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_peps_beneficiarios_sumar_2019
+
+#Aportantes
+external_beneficiarios_sumar_2019 |> 
+  inner_join(dnis_aportantes) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2019") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_aportantes_beneficiarios_sumar_2019
+
+#Empleados
+external_beneficiarios_sumar_2019 |> 
+  inner_join(dnis_empleados) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2019") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_empleados_beneficiarios_sumar_2019
+
+
+write_csv(interim_peps_beneficiarios_sumar_2019,"../../../data/interim/beneficiaries/interim_peps_beneficiarios_sumar_2019.csv")
+write_csv(interim_aportantes_beneficiarios_sumar_2019,"../../../data/interim/beneficiaries/interim_aportantes_beneficiarios_sumar_2019.csv")
+write_csv(interim_empleados_beneficiarios_sumar_2019,"../../../data/interim/beneficiaries/interim_empleados_beneficiarios_sumar_2019.csv")
+  
+```
+
+```{r}
+#2020
+nombres_columnas<-c("nombre","apellido","clase_doc","tipo_doc","doc","fecha_nacimiento","apariciones")
+colnames(external_beneficiarios_sumar_2020)<-nombres_columnas
+
+#Peps
+external_beneficiarios_sumar_2020 |> 
+  #select(doc, apariciones) |> 
+  inner_join(dnis_peps) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2020") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_peps_beneficiarios_sumar_2020
+
+#Aportantes
+external_beneficiarios_sumar_2020 |> 
+  inner_join(dnis_aportantes) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2020") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_aportantes_beneficiarios_sumar_2020
+
+#Empleados
+external_beneficiarios_sumar_2020 |> 
+  inner_join(dnis_empleados) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2020") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_empleados_beneficiarios_sumar_2020
+
+write_csv(interim_peps_beneficiarios_sumar_2020,"../../../data/interim/beneficiaries/interim_peps_beneficiarios_sumar_2020.csv")
+write_csv(interim_aportantes_beneficiarios_sumar_2020,"../../../data/interim/beneficiaries/interim_aportantes_beneficiarios_sumar_2020.csv")
+write_csv(interim_empleados_beneficiarios_sumar_2020,"../../../data/interim/beneficiaries/interim_empleados_beneficiarios_sumar_2020.csv")
+```
+
+```{r}
+#2021
+nombres_columnas<-c("nombre","apellido","clase_doc","tipo_doc","doc","fecha_nacimiento","apariciones")
+colnames(external_beneficiarios_sumar_2021)<-nombres_columnas
+
+#Peps
+external_beneficiarios_sumar_2021 |> 
+  #select(doc, apariciones) |> 
+  inner_join(dnis_peps) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2021") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_peps_beneficiarios_sumar_2021
+
+#Aportantes
+external_beneficiarios_sumar_2021 |> 
+  inner_join(dnis_aportantes) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2021") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_aportantes_beneficiarios_sumar_2021
+
+#Empleados
+external_beneficiarios_sumar_2021 |> 
+  inner_join(dnis_empleados) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2021") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_empleados_beneficiarios_sumar_2021
+
+write_csv(interim_peps_beneficiarios_sumar_2021,"../../../data/interim/beneficiaries/interim_peps_beneficiarios_sumar_2021.csv")
+write_csv(interim_aportantes_beneficiarios_sumar_2021,"../../../data/interim/beneficiaries/interim_aportantes_beneficiarios_sumar_2021.csv")
+write_csv(interim_empleados_beneficiarios_sumar_2021,"../../../data/interim/beneficiaries/interim_empleados_beneficiarios_sumar_2021.csv")
+```
+
+```{r}
+#2022
+nombres_columnas<-c("nombre","apellido","clase_doc","tipo_doc","doc","fecha_nacimiento","apariciones")
+colnames(external_beneficiarios_sumar_2022)<-nombres_columnas
+
+#Peps
+external_beneficiarios_sumar_2022 |> 
+  #select(doc, apariciones) |> 
+  inner_join(dnis_peps) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2022") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_peps_beneficiarios_sumar_2022
+
+#Aportantes
+external_beneficiarios_sumar_2022 |> 
+  inner_join(dnis_aportantes) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2022") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_aportantes_beneficiarios_sumar_2022
+
+#Empleados
+external_beneficiarios_sumar_2022 |> 
+  inner_join(dnis_empleados) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2022") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_empleados_beneficiarios_sumar_2022
+
+write_csv(interim_peps_beneficiarios_sumar_2022,"../../../data/interim/beneficiaries/interim_peps_beneficiarios_sumar_2022.csv")
+write_csv(interim_aportantes_beneficiarios_sumar_2022,"../../../data/interim/beneficiaries/interim_aportantes_beneficiarios_sumar_2022.csv")
+write_csv(interim_empleados_beneficiarios_sumar_2022,"../../../data/interim/beneficiaries/interim_empleados_beneficiarios_sumar_2022.csv")
+```
+
+
+```{r}
+#2023
+nombres_columnas<-c("nombre","apellido","clase_doc","tipo_doc","doc","fecha_nacimiento","apariciones")
+colnames(external_beneficiarios_sumar_2023)<-nombres_columnas
+
+#Peps
+external_beneficiarios_sumar_2023 |> 
+  #select(doc, apariciones) |> 
+  inner_join(dnis_peps) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2023") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_peps_beneficiarios_sumar_2023
+
+#Aportantes
+external_beneficiarios_sumar_2023 |> 
+  inner_join(dnis_aportantes) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2023") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_aportantes_beneficiarios_sumar_2023
+
+#Empleados
+external_beneficiarios_sumar_2023 |> 
+  inner_join(dnis_empleados) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2023") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_empleados_beneficiarios_sumar_2023
+
+write_csv(interim_peps_beneficiarios_sumar_2023,"../../../data/interim/beneficiaries/interim_peps_beneficiarios_sumar_2023.csv")
+write_csv(interim_aportantes_beneficiarios_sumar_2023,"../../../data/interim/beneficiaries/interim_aportantes_beneficiarios_sumar_2023.csv")
+write_csv(interim_empleados_beneficiarios_sumar_2023,"../../../data/interim/beneficiaries/interim_empleados_beneficiarios_sumar_2023.csv")
+```
+
+```{r}
+#2024
+nombres_columnas<-c("nombre","apellido","clase_doc","tipo_doc","doc","fecha_nacimiento","apariciones")
+colnames(external_beneficiarios_sumar_2024)<-nombres_columnas
+
+#Peps
+external_beneficiarios_sumar_2024 |> 
+  #select(doc, apariciones) |> 
+  inner_join(dnis_peps) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2024") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_peps_beneficiarios_sumar_2024
+
+#Aportantes
+external_beneficiarios_sumar_2024 |> 
+  inner_join(dnis_aportantes) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2024") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_aportantes_beneficiarios_sumar_2024
+
+#Empleados
+external_beneficiarios_sumar_2024 |> 
+  inner_join(dnis_empleados) |> 
+  select(-clase_doc, -tipo_doc) |> 
+  mutate(periodo ="2024") |> 
+  mutate(fecha_nacimiento =str_remove_all(fecha_nacimiento,"00:.+")) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, str_squish)->interim_empleados_beneficiarios_sumar_2024
+
+
+write_csv(interim_peps_beneficiarios_sumar_2024,"../../../data/interim/beneficiaries/interim_peps_beneficiarios_sumar_2024.csv")
+write_csv(interim_aportantes_beneficiarios_sumar_2024,"../../data/../interim/beneficiaries/interim_aportantes_beneficiarios_sumar_2024.csv")
+write_csv(interim_empleados_beneficiarios_sumar_2024,"../../data/../interim/beneficiaries/interim_empleados_beneficiarios_sumar_2024.csv")
+```
+
+
+#Unify
+```{r}
+#Peps
+file_url<-"https://drive.google.com/uc?export=download&id=1vOQM_0VrS5gfiFwZbbWPrh60XUgQMZe0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_peps_beneficiarios_sumar_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1ANm_LkjZdgycdE_vsZU4qsADH4aS6feY"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_peps_beneficiarios_sumar_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1kbE7HR0gnVnS7RBOJx4DibgH9kE7yp8D"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_peps_beneficiarios_sumar_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1-w043OeDYbvcZz9hs5x3jjsgo7LT3Ba8"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_peps_beneficiarios_sumar_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=19GPVrQCKR7ZUGn36ZYWmoRG7prtmXrUi"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_peps_beneficiarios_sumar_2020
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1QHxmgTiJW6N6zZULoxomoeTlF9UsuEGw"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_peps_beneficiarios_sumar_2019
+file.remove( file_content$local_path)
+
+
+
+#Aportantes
+
+file_url<-"https://drive.google.com/uc?export=download&id=1qUz7AKM96kamU1eh6QceOyorJHslMk1Q"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_aportantes_beneficiarios_sumar_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1R77_o3RNS1YDV8hp7o_eNJIouvgm9Kqk"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_aportantes_beneficiarios_sumar_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1r4cn19YnsJ5hAZG8dp1gSEMdeubSdtoc"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_aportantes_beneficiarios_sumar_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1jxtvdfKY1DYLEvFObQIod51dVO1YLUln"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_aportantes_beneficiarios_sumar_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1xDgZZUkVC-ZXbJOjVC8uQMWnD1djIYOJ"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_aportantes_beneficiarios_sumar_2020
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1pCDr7JiE9Uy1uwfibUvdjX0wE7R7O2Ue"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_aportantes_beneficiarios_sumar_2019
+file.remove( file_content$local_path)
+
+
+#Empleados
+file_url<-"https://drive.google.com/uc?export=download&id=1dLkQmUOSq-WY4f9btRgg7_k1UAjRAWVz"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_empleados_beneficiarios_sumar_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1fhHLEOb_0_wWQfc4aMt_Z-6wTT4DgrPa"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_empleados_beneficiarios_sumar_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1nCmgkVHuMyYRFMP26DPm_hI-4rdbN8GO"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_empleados_beneficiarios_sumar_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1cMKIiInwI_95pkH1iAq2ejnop5QahD5i"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_empleados_beneficiarios_sumar_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1f5cuk4zPxWKcWe2GxXma-zwmS8eVQTJX"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_empleados_beneficiarios_sumar_2020
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1Xfviyc92R_AU4qJm1ymQO_cD6PNRijNu"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_empleados_beneficiarios_sumar_2019
+file.remove( file_content$local_path)
+
+```
+
+```{r}
+#Peps
+bind_rows(interim_peps_beneficiarios_sumar_2024, interim_peps_beneficiarios_sumar_2023, interim_peps_beneficiarios_sumar_2022,
+          interim_peps_beneficiarios_sumar_2021, interim_peps_beneficiarios_sumar_2020, interim_peps_beneficiarios_sumar_2019) |> 
+  group_by(doc) |> 
+  mutate(ejercicios_registros = paste0(periodo, collapse="-")) |> 
+  mutate(apariciones = sum(apariciones)) |> 
+  ungroup() |> 
+  distinct(doc, .keep_all = TRUE) |> 
+  mutate(primer_registro_plan = str_extract(ejercicios_registros,"\\d{4}$")) |> 
+  rename(ultimo_registro_plan = periodo) |> 
+  relocate(primer_registro_plan,.before = ultimo_registro_plan)->processed_peps_beneficiarios_sumar_2019_2024
+
+#Donors
+bind_rows(interim_aportantes_beneficiarios_sumar_2024, interim_aportantes_beneficiarios_sumar_2023, interim_aportantes_beneficiarios_sumar_2022,
+          interim_aportantes_beneficiarios_sumar_2021, interim_aportantes_beneficiarios_sumar_2020, interim_aportantes_beneficiarios_sumar_2019) |> 
+  group_by(doc) |> 
+  mutate(ejercicios_registros = paste0(periodo, collapse="-")) |> 
+  mutate(apariciones = sum(apariciones)) |> 
+  ungroup() |> 
+  distinct(doc, .keep_all = TRUE) |> 
+  mutate(primer_registro_plan = str_extract(ejercicios_registros,"\\d{4}$")) |> 
+  rename(ultimo_registro_plan = periodo) |> 
+  relocate(primer_registro_plan,.before = ultimo_registro_plan)->processed_aportantes_beneficiarios_sumar_2019_2024
+
+#Empleados
+bind_rows(interim_empleados_beneficiarios_sumar_2024, interim_empleados_beneficiarios_sumar_2023, interim_empleados_beneficiarios_sumar_2022,
+          interim_empleados_beneficiarios_sumar_2021, interim_empleados_beneficiarios_sumar_2020, interim_empleados_beneficiarios_sumar_2019) |> 
+  group_by(doc) |> 
+  mutate(ejercicios_registros = paste0(periodo, collapse="-")) |> 
+  mutate(apariciones = sum(apariciones)) |> 
+  ungroup() |> 
+  distinct(doc, .keep_all = TRUE) |> 
+  mutate(primer_registro_plan = str_extract(ejercicios_registros,"\\d{4}$")) |> 
+  rename(ultimo_registro_plan = periodo) |> 
+  relocate(primer_registro_plan,.before = ultimo_registro_plan)->processed_empleados_beneficiarios_sumar_2019_2024
+
+```
+
+#Save processed data
+```{r}
+write.csv(processed_aportantes_beneficiarios_sumar_2019_2024,"./processed_aportantes_beneficiarios_sumar_2019_2024.csv")
+drive_update(as_id("1Kn4i4FfcrBDmBJEBQcuzo0Elr4W3g_XT"),"./processed_aportantes_beneficiarios_sumar_2019_2024.csv")
+file.remove("./processed_aportantes_beneficiarios_sumar_2019_20245.csv")
+
+write.csv(processed_empleados_beneficiarios_sumar_2019_2024,"./processed_empleados_beneficiarios_sumar_2019_20245.csv")
+drive_update(as_id("1_AW1wm7ARgx94_0uojaxCyTV8EMVaxhe"),"./processed_empleados_beneficiarios_sumar_2019_2024.csv")
+file.remove("./processed_empleados_beneficiarios_sumar_2019_2024.csv")
+
+write.csv(processed_peps_beneficiarios_sumar_2019_2024,"./processed_peps_beneficiarios_sumar_2019_2024.csv")
+drive_update(as_id("1HmtvnOkB1ptDec_yOzUoE970qPkLGUvG"),"./processed_peps_beneficiarios_sumar_2019_2024.csv")
+file.remove("./processed_peps_beneficiarios_sumar_2019_2024.csv")
+
+```
+

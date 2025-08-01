@@ -1,0 +1,307 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+
+#Load data
+```{r}
+#Autoridades apn
+
+file_url<-"https://drive.google.com/uc?export=download&id=1rCdJqWr8p0TT1pZji3t9Doju-wV-FNqR"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> 
+  mutate(periodo = "2025-06-01")->external_autoridades_apn_junio_2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1lGv2o8rK8ZrHJNbtXoPdIUddJ4toaiE3"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> 
+  mutate(periodo = "2025-04-01")->external_autoridades_apn_abril_2025
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=1obfnNkf17ONAjK6RnFkWch6hWJnbHyq_"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> 
+  mutate(periodo = "2025-02-01")->external_autoridades_apn_febrero_2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1S7DnxCuDlDg3Ybhqw5scyIgehLokqRow"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> 
+  mutate(periodo = "2024-12-01")->external_autoridades_apn_diciembre_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1OjRZ1FblYW09NBALLZOh0lAPg5mRBPI_"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> 
+  mutate(autoridad_dni = as.character(autoridad_dni)) |> 
+  mutate(periodo = "2023-10-01")->external_autoridades_apn_octubre_2023
+file.remove( file_content$local_path)
+
+#Judicial
+file_url<-"https://drive.google.com/uc?export=download&id=1QCHVHAzl6I09r53LmYe72F6bTa1kZjYh"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_jueces_pjn_octubre_2023
+file.remove( file_content$local_path)
+
+#Gobernadres
+file_url<-"https://drive.google.com/uc?export=download&id=17FPNvEYpNkr8VC5biEeKtJ0PyEpHgF5d"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_gobernadores_pen_2019_2027
+file.remove( file_content$local_path)
+
+
+#Legislativo
+file_url<-"https://drive.google.com/uc?export=download&id=1YCCKwkYBvaTYltgRtZj2rMqpjh9Xfcds"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)->external_directorio_legisladores_2024_2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1nYEJ9mdyfqgD6ZIHfLzW_mUtgWXivBSm"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, guess_max = 5000)->external_directorios_2000_2024
+file.remove( file_content$local_path)
+
+#Legislatura CABA
+file_url<-"https://drive.google.com/uc?export=download&id=1RQDyQxU-1DYKxVTc7nXzu-NNnBzonisA"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, guess_max = 5000)->external_legisladores_caba_2021_2027
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1nQy4CDkvA_Cb40ag3rLlf8wywF-jeFTH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path, guess_max = 5000)->external_legisladores_2021_2029
+file.remove( file_content$local_path)
+
+```
+
+
+
+#Functions
+```{r}
+remove_accents <- function(text) {
+  text %>%
+    str_replace_all("Á", "A") %>%
+    str_replace_all("É", "E") %>%
+    str_replace_all("Í", "I") %>%
+    str_replace_all("Ó", "O") %>%
+    str_replace_all("Ú", "U")
+}
+```
+
+
+#Clean data
+```{r}
+#Ejecutivo nacional
+external_autoridades_apn_junio_2025 |> 
+  bind_rows(external_autoridades_apn_abril_2025) |>
+  bind_rows(external_autoridades_apn_febrero_2025) |> 
+  bind_rows(external_autoridades_apn_diciembre_2024)|> 
+  bind_rows(external_autoridades_apn_octubre_2023) |> 
+  mutate(nombre_completo_pep = paste(autoridad_nombre, autoridad_apellido)) |> 
+  select(nombre_completo_pep,jurisdiccion,unidad,cargo, car_nivel, tipo_administracion, autoridad_nombre, autoridad_apellido, autoridad_dni, autoridad_cuil, autoridad_sexo, periodo) |> 
+  rename(cargo_nivel = car_nivel,  
+         nombre_pep = autoridad_nombre,
+         apellido_pep = autoridad_apellido,dni_pep = autoridad_dni, cuil_pep = autoridad_cuil, genero_pep = autoridad_sexo, organismo =jurisdiccion,estructura= unidad) |> 
+  relocate(dni_pep, cuil_pep, nombre_pep, apellido_pep, nombre_completo_pep, genero_pep, cargo,organismo,estructura, cargo_nivel,  ultimo_registro_pep = periodo) |> 
+  filter(!is.na(dni_pep)) |> 
+  distinct(dni_pep, .keep_all = TRUE) |> 
+  #We want a field indicating when they first appeared in our data base
+  left_join(external_autoridades_apn_abril_2025 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>  
+  left_join(external_autoridades_apn_febrero_2025 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>  
+  left_join(external_autoridades_apn_diciembre_2024 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |>  
+  left_join(external_autoridades_apn_octubre_2023 |> distinct(autoridad_dni, periodo), by = c("dni_pep"="autoridad_dni")) |> 
+  mutate(primer_registro_pep = case_when(
+    !is.na(periodo.y.y)~periodo.y.y,
+    !is.na(periodo.x.x) ~ periodo.x.x,
+    !is.na(periodo.y) ~ periodo.y,
+    !is.na(periodo.x) ~ periodo.x,
+    TRUE ~ ultimo_registro_pep
+  )) |> 
+  select(-periodo.x,-periodo.y,-periodo.y.y,-periodo.x.x) |> 
+  mutate(ultimo_registro_pep = as.Date(ultimo_registro_pep)) |> 
+  mutate(primer_registro_pep = as.Date(primer_registro_pep)) |> 
+  mutate(ingreso_pep = NA, egreso_pep = NA) |> 
+  relocate(ingreso_pep, egreso_pep, primer_registro_pep, ultimo_registro_pep, .after = tipo_administracion) |> 
+  mutate(poder = "EJECUTIVO") |> 
+  mutate(fecha_nacimiento_pep = NA, distrito = NA, partido_pep = NA) |> 
+  mutate(dni_pep = case_when(
+    nombre_pep== "GABRIEL CRISTIAN" &apellido_pep =="ABSI"~"22344319",
+    TRUE ~ dni_pep
+  )) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, remove_accents) |> 
+  relocate(dni_pep, cuil_pep, nombre_pep, apellido_pep, nombre_completo_pep, genero_pep,fecha_nacimiento_pep,partido_pep, distrito, cargo, organismo, estructura, cargo_nivel, tipo_administracion, ingreso_pep, egreso_pep, primer_registro_pep, ultimo_registro_pep, poder)->interim_autoridades_apn
+
+#Gobernadores
+external_gobernadores_pen_2019_2027 |> 
+  mutate(ultimo_registro_pep = str_remove(mandato,"\\d{4}-")) |> 
+  mutate(ultimo_registro_pep = as.Date(paste0(ultimo_registro_pep,"-12-01")) ) |> 
+  mutate(primer_registro_pep = str_remove(mandato,"-\\d{4}")) |> 
+  mutate(primer_registro_pep  = as.Date(paste0(primer_registro_pep ,"-12-01")) ) |> 
+  rename(dni_pep = dni,nombre_pep = nombre,apellido_pep = apellido,
+         nombre_completo_pep = nombre_completo,
+         partido_pep = partido_gobernante
+                ) |> 
+  mutate(cuil_pep =NA, genero_pep=NA, fecha_nacimiento_pep = NA, estructura =NA, cargo_nivel = NA, tipo_administracion = NA, poder = "EJECUTIVO SUBNACIONAL") |> 
+  select(-id, -fuente_dni,-mandato) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, remove_accents) ->auxiliar_gobernadores
+
+auxiliar_gobernadores |> 
+  arrange(primer_registro_pep) |> 
+  distinct(dni_pep, .keep_all = TRUE) |> 
+  select(dni_pep, primer_registro_pep)->auxiliar_gobernadores_primeros_registros
+
+auxiliar_gobernadores |> 
+  mutate(dni_pep = as.character(dni_pep)) |> 
+  #We want to keep rows with the last available registry
+  arrange(desc(ultimo_registro_pep)) |> 
+  select(-primer_registro_pep) |> 
+  #We want to get the first data available
+  distinct(dni_pep, .keep_all = TRUE) |> 
+  left_join(auxiliar_gobernadores_primeros_registros |>  mutate(dni_pep = as.character(dni_pep)) ) |> 
+  mutate(ingreso_pep = NA, egreso_pep = NA) |> 
+  relocate(dni_pep, cuil_pep, nombre_pep, apellido_pep, nombre_completo_pep, genero_pep,fecha_nacimiento_pep,partido_pep, distrito, cargo, organismo, estructura, cargo_nivel, tipo_administracion, ingreso_pep, egreso_pep, primer_registro_pep, ultimo_registro_pep, poder)->interim_gobernadores_2019_2027
+```
+
+```{r}
+external_jueces_pjn_octubre_2023 |> 
+  select(-fecha_ultimo_ascenso, -documento_de_identidad_tipo) |> 
+  rename(dni_pep = documento_de_identidad_numero, nombre_pep = nombre, apellido_pep = apellido, 
+         nombre_completo_pep = apellido_nombre, fecha_nacimiento_pep = fecha_de_nacimiento, ingreso_pep = fecha_de_ingreso, cargo = cargo_descripcion,  organismo = cargo_dependencia) |> 
+  mutate(fecha_nacimiento_pep = case_when(
+    str_detect(nombre_pep,"HORACIO DANIEL")~ "11/08/1956",
+    TRUE ~ fecha_nacimiento_pep
+  )) |> 
+  mutate(ingreso_pep = case_when(
+    str_detect(nombre_pep,"RICARDO")~ "12/12/2004",
+    TRUE ~ ingreso_pep
+  )) |> 
+  mutate(fecha_nacimiento_pep = dmy(fecha_nacimiento_pep)) |> 
+  mutate(ingreso_pep = dmy(ingreso_pep)) |> 
+  mutate(egreso_pep = NA) |> 
+  mutate(primer_registro_pep = ingreso_pep,
+         ultimo_registro_pep = as.Date("2025-02-01")) |> 
+   mutate(poder = "JUDICIAL") |> 
+  mutate(cuil_pep =NA, genero_pep="M",  estructura =NA, cargo_nivel = NA, tipo_administracion = NA, distrito = NA, partido_pep = NA) |> 
+  mutate(dni_pep = as.character(dni_pep)) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, remove_accents) |> 
+  relocate(dni_pep, cuil_pep, nombre_pep, apellido_pep, nombre_completo_pep, genero_pep,fecha_nacimiento_pep,partido_pep, distrito, cargo, organismo, estructura, cargo_nivel, tipo_administracion, ingreso_pep, egreso_pep, primer_registro_pep, ultimo_registro_pep, poder)->interim_autoridades_pjn
+  
+```
+
+```{r}
+external_directorios_2000_2024 |> 
+  select(id, dni, camara, nombre_completo, nombre, apellido, partido, genero, inicio_mandato, final_mandato, distrito, fecha_nacimiento) |> 
+  mutate(fecha_nacimiento = dmy(fecha_nacimiento)) |> 
+  filter(final_mandato>2018) |> 
+  mutate(ingreso = as.Date(paste0(inicio_mandato,"-12-12")) )|> 
+  mutate(egreso = as.Date(paste0(final_mandato,"-12-12")) ) |> 
+  select(-inicio_mandato,  -final_mandato)->auxiliar_legisladores
+
+auxiliar_legisladores |> 
+  arrange(ingreso) |> 
+  distinct(id, .keep_all = TRUE) |> 
+  select(id, ingreso)->auxiliar_legisladores_ingresos
+
+auxiliar_legisladores |> 
+  #We want to keep the last registry available
+  arrange(desc(egreso)) |> 
+  distinct(id, .keep_all = TRUE) |> 
+  select(-ingreso) |> 
+  #We want to know when they firs appeared
+  left_join(auxiliar_legisladores_ingresos, by = "id") |> 
+  rename(dni_pep = dni) |> 
+  #We are missing some dnis
+  #We try to get them from the last directorio
+  left_join(external_directorio_legisladores_2024_2025 |> distinct(id, dni), by = "id") |> 
+  mutate(dni_pep = case_when(
+    id == 484~"16870073",
+    id == 902~"8186471",
+    id== 1493~"13414040",
+    is.na(dni_pep)~ dni,
+    TRUE~ dni_pep
+  )) |> 
+  select(-dni, - id) |> 
+  filter(!is.na(dni_pep)) |> 
+  rename(organismo = camara) |> 
+  mutate(organismo = paste("CAMARA",organismo)) |> 
+  mutate(cargo = case_when(
+    str_detect(organismo,"DIPUTADOS")~ "DIPUTADO",
+    TRUE ~"SENADOR"
+  )) |> 
+  mutate(genero = case_when(
+    str_detect(genero,"MASCULINO")~ "M",
+    str_detect(genero,"FEMENINO")~ "F",
+    TRUE ~ genero
+  )) |> 
+  rename(nombre_completo_pep = nombre_completo,
+         nombre_pep = nombre, apellido_pep = apellido,
+         partido_pep = partido, genero_pep = genero, 
+         ingreso_pep = ingreso, egreso_pep = egreso,
+         fecha_nacimiento_pep = fecha_nacimiento
+         ) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, remove_accents) |> 
+  mutate(primer_registro_pep = ingreso_pep, ultimo_registro_pep = egreso_pep, cuil_pep = NA, estructura = NA, cargo_nivel = NA, tipo_administracion = NA, poder = "LEGISLATIVO") |> 
+  relocate(dni_pep, cuil_pep, nombre_pep, apellido_pep, nombre_completo_pep, genero_pep,fecha_nacimiento_pep,partido_pep, distrito, cargo, organismo, estructura, cargo_nivel, tipo_administracion, ingreso_pep, egreso_pep, primer_registro_pep, ultimo_registro_pep, poder)->interim_autoridades_legislativo_2024
+
+
+```
+
+
+```{r}
+external_legisladores_2021_2029 |> 
+  rename(dni_pep = DNI, apellido_pep = Apellido, nombre_pep = Nombre,distrito= Distrito,
+         cargo = Cargo, primer_registro_pep = Inicio, ultimo_registro_pep =Fin, partido_pep = Bloque) |> 
+  select(-Departamento,-`Orientación Política`,-Comentario) |> 
+  mutate(dni_pep = str_remove_all(dni_pep,"\\.")) |> 
+  mutate(cargo="LEGISLADOR") |> 
+  mutate(primer_registro_pep=  as.Date (paste0( str_remove_all(primer_registro_pep,"\\.0"), "-12-12") ) ) |> 
+   mutate(ultimo_registro_pep=  as.Date (paste0( str_remove_all(ultimo_registro_pep,"\\.0"), "-12-12") ) ) |> 
+  mutate(organismo = "LEGISLATURA") |> 
+  mutate(nombre_completo_pep = paste(nombre_pep, apellido_pep)) |> 
+  mutate(distrito = case_when(
+    distrito=="CABA"~ "CIUDAD AUTONOMA DE BUENOS AIRES",
+    TRUE ~ distrito
+  ) ) |> 
+  mutate_if(is.character, str_to_upper) |> 
+  mutate_if(is.character, remove_accents) |> 
+  mutate(ingreso_pep=NA, egreso_pep=NA, cuil_pep = NA, estructura = NA, cargo_nivel = NA, tipo_administracion = NA,
+         fecha_nacimiento_pep = NA, genero_pep=NA, poder = "LEGISLATIVO") |> 
+  relocate(dni_pep, cuil_pep, nombre_pep, apellido_pep, nombre_completo_pep, genero_pep,fecha_nacimiento_pep,partido_pep, distrito, cargo, organismo, estructura, cargo_nivel, tipo_administracion, ingreso_pep, egreso_pep, primer_registro_pep, ultimo_registro_pep, poder)->interim_legisladores_2021_2029
+
+```
+
+
+
+```{r}
+bind_rows(interim_autoridades_apn, interim_gobernadores_2019_2027, interim_autoridades_legislativo_2024,
+          interim_autoridades_pjn, interim_legisladores_2021_2029) |> 
+  #No filtramos los dnis repetidos poque son cargos diferentes en teoria
+  #distinct(dni_pep, .keep_all = TRUE) |> 
+  rename(distrito_pep = distrito)->processed_peps_2019_2025
+```
+
+
+
+
+#Save
+```{r}
+write_csv(processed_peps_2019_2025,"../../../data/processed/peps/processed_peps_2019_2025.csv")
+drive_update(as_id("1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"),"../../../data/processed/peps/processed_peps_2019_2025.csv")
+file.remove("../../../data/processed/peps/processed_peps_2019_2025.csv")
+```
+

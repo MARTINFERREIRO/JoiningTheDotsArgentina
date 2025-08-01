@@ -1,0 +1,200 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+#DATA
+
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=14LtK3HcvMHjYzMhgfiTzs89FIsWpixyW"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> mutate(dni =as.character(dni))->external_candidaturas_legislaturas_caba_chaco_jujuy_misiones_2025
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1tQGlgS3qDTnQZhCLD4f-LdVwuL3_DV0Z"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |>rename(dni = dni_pep) |>  mutate(dni = as.character(dni)) |> mutate(dni =str_squish(dni)) ->processed_peps
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Empleados
+file_url<-"https://drive.google.com/uc?export=download&id=1y0jXMd3jAnDetdp1fr-jXBOIeuhgSFUK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni = as.character(dni))->processed_empleados_ejecutivo
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1ng8ZeDJrLiUq9DcR82CYBg4vlGU2TDxH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_judicial
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1OtarWp_Yxf8Lj2paATMot5f2uAC3rAWL"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(dni = as.character(dni))->processed_empleados_legislativo
+file.remove( file_content$local_path)
+```
+
+
+```{r}
+#Prgramas sciales
+
+file_url<-"https://drive.google.com/uc?export=download&id=1GHGHjsaRn430Ngs73YdMSfUFwbR89wFH"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_acompanar_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1f6fyk7j6SLnQXSNThFtniEIMqefrJhti"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_progresar_2018_2024
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=16kmF-rpbQI60kvlAOVsJiCU5mGsECg3-"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_potenciar_2020_2023
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=1nCF7QzJdR3JJwS2GezH_s1acdMwuhKDk"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_mi_pieza
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1dLcpxGP5tJH4sTaguHrYc_PodjSK-nsB"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_auh_2021_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1r-OFWTZrUCDq1UY7L1A0y8G5Wevdb-aa"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_alimentar_2020_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1F2jVHklaEK7ihF4scWO097JQc1WUUxCu"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_procrear_2019_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1NBHj2zNeg39T8I86iZzHcWNbtNIM9mgT"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)->processed_beneficiaries_volver_trabajo_2024
+file.remove( file_content$local_path)
+```
+
+```{r}
+#Contributions
+file_url<-"https://drive.google.com/uc?export=download&id=1cK0lrE-MzjF1dZav_-8e9Q11Q8OHLoSb"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(dni_aportante=as.character(dni_aportante))->processed_contributions_2011_2025
+file.remove( file_content$local_path)
+```
+
+```{r}
+#Sumar
+file_url<-"https://drive.google.com/uc?export=download&id=1Kn4i4FfcrBDmBJEBQcuzo0Elr4W3g_XT"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path) |> mutate(doc = as.character(doc))->processed_aportantes_beneficiarios_sumar_2019_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1HmtvnOkB1ptDec_yOzUoE970qPkLGUvG"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(doc = as.character(doc))->processed_peps_beneficiarios_sumar_2019_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1_AW1wm7ARgx94_0uojaxCyTV8EMVaxhe"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_csv(file_content$local_path)|> mutate(doc = as.character(doc))->processed_empleados_beneficiarios_sumar_2019_2024
+file.remove( file_content$local_path)
+
+```
+
+
+#AUXILIARY DATA FRAMES
+
+```{r}
+processed_peps |> 
+  filter(str_detect(organismo,"LEGISLATURA"))->auxiliar_legisladores_caba
+```
+
+
+```{r}
+bind_rows( processed_beneficiaries_volver_trabajo_2024, processed_beneficiaries_acompanar_2024, processed_beneficiaries_potenciar_2020_2023, 
+          processed_beneficiaries_auh_2021_2024, processed_beneficiaries_alimentar_2020_2024, processed_beneficiaries_progresar_2018_2024,
+         processed_beneficiaries_procrear_2019_2023,processed_beneficiaries_mi_pieza) |> 
+  select(dni_beneficiario, programa, alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan ) |> 
+  mutate(dni_beneficiario = as.character(dni_beneficiario))->auxiliar_beneficiarios_planes
+
+```
+
+```{r}
+processed_contributions_2011_2025 |> 
+  filter(fecha_aporte>as.Date("2018-12-31"))->auxiliary_contributions_2019_2025
+```
+
+```{r}
+bind_rows(processed_empleados_ejecutivo, processed_empleados_legislativo, processed_empleados_judicial) |> 
+  select(-1)->auxiliary_all_empleados
+
+```
+
+
+#CROSS MATCHING
+
+#BENEFICIARIOS
+```{r}
+#No hay
+auxiliar_beneficiarios_planes |> 
+  inner_join(auxiliar_legisladores_caba, by = c("dni_beneficiario"="dni"))->interim_beneficiarios_legisladores
+
+auxiliar_beneficiarios_planes |> 
+  inner_join(external_candidaturas_legislaturas_caba_chaco_jujuy_misiones_2025, by = c("dni_beneficiario"="dni"))->interim_beneficiarios_candidaturas_legisladores
+
+#Hay mas de 400 candidaturas
+interim_beneficiarios_candidaturas_legisladores |> distinct(dni_beneficiario) |> nrow()
+```
+
+
+
+#Empleados
+```{r}
+#Tenemos 4 además de freire, pero solo a uno se le superpone con el mandato y figurra con licencia sin goce de sueldo
+auxiliar_legisladores_caba |> 
+  inner_join(auxiliary_all_empleados, by = "dni") |> 
+  mutate(empleo_siendo_legislador = (primer_registro_cargo>primer_registro_pep& primer_registro_cargo<ultimo_registro_pep)|(ultimo_registro_cargo >primer_registro_pep & ultimo_registro_cargo<ultimo_registro_pep)| (primer_registro_cargo<primer_registro_pep&ultimo_registro_cargo>ultimo_registro_pep)   )->interim_legisladores_empleos
+```
+
+
+
+#Aportantes
+```{r}
+#Find doners who received a plan
+auxiliar_legisladores_caba |> 
+  inner_join(auxiliary_contributions_2019_2025|> filter(tipo_aportante=="HUMANA") , by = c("dni"="dni_aportante")) |> 
+  mutate(aporto_siendo_beneficiario =fecha_aporte>primer_registro_pep&fecha_aporte<ultimo_registro_pep)->interim_legisladores_aportes
+
+#Son 23
+interim_legisladores_aportes |> 
+  distinct(dni) |> nrow()
+
+#Los que mas donan son 
+#23992930	GABRIEL SOLANO	FRENTE DE IZQUIERDA DE LOS TRABAJADORES / PO	39206	
+#31477868	VICTORIA FREIRE	UNION POR LA PATRIA	31817		
+#18155173	ANDREA D´ATRI	PTS FRENTE DE IZQ-UNIDAD	18006	
+#29906725	RAMIRO MARRA	NA	11494	
+#28200690	MERCEDES TRIMARCHI	IZQUIERDA SOCIALISTA-FRENTE DE IZQUIERDA-UNIDAD	8728	
+interim_legisladores_aportes |> 
+  group_by(dni) |> 
+  mutate(total_aportes = sum(monto_aporte_usd)) |> 
+  relocate(nombre_completo_pep, partido, total_aportes)
+```
+

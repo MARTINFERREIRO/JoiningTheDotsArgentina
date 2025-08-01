@@ -1,0 +1,75 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+```
+
+#Load data
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1jKxj_n6jTIV7OP7EKgx4MOyOWXL7qSUK"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path) ->interim_beneficiaries_alimentar_2024
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1Qufgum7ObMhn49LCKd5lUz9iXPlZCTDC"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_beneficiaries_alimentar_2023
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1C1AY0JmBzquH7unaVoyeoLbRBFtzPkDi"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_beneficiaries_alimentar_2022
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1lv2AnBs9QNERdEPvcZqaD6rsNp6KFGG3"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_beneficiaries_alimentar_2021
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1rXXQas4PThtizo8ZL66ddRvZfAQANmTV"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read.csv(file_content$local_path)->interim_beneficiaries_alimentar_2020
+file.remove( file_content$local_path)
+
+```
+
+
+#Clean
+
+```{r}
+bind_rows(interim_beneficiaries_alimentar_2024, interim_beneficiaries_alimentar_2023, interim_beneficiaries_alimentar_2022,
+          interim_beneficiaries_alimentar_2021, interim_beneficiaries_alimentar_2020)->auxiliar_alimentar_2020_2024
+```
+
+```{r}
+auxiliar_alimentar_2020_2024 |> 
+  arrange(primer_registro_plan) |> 
+  distinct(dni_beneficiario,.keep_all = TRUE) |> 
+  select(dni_beneficiario, primer_registro_plan)->primeros_registros_alimentar
+
+auxiliar_alimentar_2020_2024 |> 
+  arrange(desc(ultimo_registro_plan)) |> 
+  distinct(dni_beneficiario,.keep_all = TRUE) |> 
+  select(-primer_registro_plan) |> 
+  left_join(primeros_registros_alimentar, by = "dni_beneficiario") |> 
+  mutate(programa = "ALIMENTAR", alta_plan = NA, baja_plan = NA) |> 
+  relocate(dni_beneficiario, nombre_beneficiario, alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan, programa)->processed_beneficiaries_alimentar_2020_2024
+
+```
+
+
+
+#Save
+```{r}
+write.csv(processed_beneficiaries_alimentar_2020_2024,"./processed_beneficiaries_alimentar_2020_2024.csv")
+drive_update(as_id("1r-OFWTZrUCDq1UY7L1A0y8G5Wevdb-aa"),"./processed_beneficiaries_alimentar_2020_2024.csv")
+file.remove("./processed_beneficiaries_alimentar_2020_2024.csv")
+```
+

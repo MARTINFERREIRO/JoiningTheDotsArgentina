@@ -1,0 +1,160 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(googledrive)
+library(lubridate)
+
+```
+
+#Load data
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1PFuKTU1n8C1LLqt4gwB3hjDNfyjBa-Gr"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) ->external_beneficiaries_volver_trabajo_2024
+file.remove( file_content$local_path)
+
+
+file_url<-"https://drive.google.com/uc?export=download&id=1S3jzwXIRP0yvgUExUpFHXcmsptGK0LBh"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) ->external_beneficiaries_volver_trabajo_2025
+file.remove( file_content$local_path)
+```
+
+#Functions
+```{r}
+replace_accented_vowels <- function(input_string) {
+  input_string |>
+    str_replace("Á", "A") |>
+    str_replace("É", "E") |>
+    str_replace("Í", "I") |>
+    str_replace("Ó", "O") |>
+    str_replace("Ú", "U")
+}
+```
+
+
+
+#Clean
+
+```{r}
+external_beneficiaries_volver_trabajo_2024 |> 
+  rename(cuit_beneficiario = Cuil,  tipo_documento = tipoDoc, dni_beneficiario = numeroDocumento, 
+         nombre_beneficiario = APELLIDOYNOMBRE, provincia_beneficiario = Provincia, fecha_nacimiento_beneficiario = FechaNacimiento,
+         abril_2024 = '042024', mayo_2024 = '052024',
+         junio_2024 = '062024', julio_2024 = `072024`,
+         agosto_2024 = '082024', septiembre_2024 =`092024`,
+         octubre_2024 = '102024', noviembre_2024 = '112024', estado_traspaso = Estado_Traspaso,
+         estado_actual = Estado_Actual, baja_plan = Fecha_Baja) |> 
+  mutate(monto_recibido_plan = 78000) |> 
+  mutate(fecha_nacimiento_beneficiario = as.Date(fecha_nacimiento_beneficiario)) |> 
+  mutate(primer_registro_plan = case_when(
+    abril_2024>0~"2024-04-01",
+    mayo_2024>0~"2024-05-01",
+    junio_2024>0~"2024-06-01",
+    julio_2024>0~"2024-07-01",
+    agosto_2024>0~"2024-08-01",
+    septiembre_2024>0~"2024-09-01",
+    octubre_2024>0~"2024-10-01",
+    noviembre_2024>0~"2024-11-01",
+    TRUE ~ NA
+  )) |> 
+  mutate(ultimo_registro_plan = case_when(
+    noviembre_2024>0~"2024-11-01",
+    octubre_2024>0~"2024-10-01",
+    septiembre_2024>0~"2024-09-01",
+    agosto_2024>0~"2024-08-01",
+    julio_2024>0~"2024-07-01",
+    junio_2024>0~"2024-06-01",
+    mayo_2024>0~"2024-05-01",
+    abril_2024>0~"2024-04-01",
+    TRUE ~ NA
+  )) |>
+  mutate(primer_registro_plan = as.Date(primer_registro_plan)) |> 
+  mutate(ultimo_registro_plan = as.Date(ultimo_registro_plan)) |> 
+  mutate(baja_plan = str_remove_all(baja_plan, "\\s.+")) |> 
+  mutate(baja_plan = dmy(baja_plan)) |> 
+  mutate(ultimo_registro_plan = case_when(
+    !is.na(baja_plan)~ baja_plan,
+    TRUE ~ ultimo_registro_plan
+  )) |> 
+  mutate(alta_plan = NA) |> 
+  #Remove beneficiaries that never received any money
+  filter(!is.na(primer_registro_plan)) |> 
+  select(dni_beneficiario, cuit_beneficiario, nombre_beneficiario,fecha_nacimiento_beneficiario, provincia_beneficiario,  alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan ) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels)|> 
+  mutate(programa ="VOLVER AL TRABAJO") ->interim_beneficiaries_volver_al_trabajo_2024
+```
+
+```{r}
+external_beneficiaries_volver_trabajo_2025 |> 
+   rename(cuit_beneficiario = CUIL,  tipo_documento = tipoDoc, dni_beneficiario = numeroDocumento, 
+         nombre_beneficiario = APELLIDOYNOMBRE, provincia_beneficiario = Provincia, fecha_nacimiento_beneficiario = FechaNacimiento,
+         diciembre_2024 = '122024', enero_2025 = '012025',
+         febrero_2025 = '022025', marzo_2025 = '032025',
+         abril_2025 = '042025',  estado_traspaso = Estado_Traspaso,
+         estado_actual = Estado_Actual, baja_plan = Fecha_Baja) |> 
+   mutate(primer_registro_plan = case_when(
+    diciembre_2024>0~"2024-12-1",
+    enero_2025>0~"2025-01-1",
+    febrero_2025>0~"2025-02-1",
+    marzo_2025>0~"2025-03-1",
+    abril_2025>0~"2025-04-1",
+    TRUE ~ NA
+  )) |> 
+  mutate(ultimo_registro_plan = case_when(
+    abril_2025>0 ~ "2025-04-30",
+    marzo_2025>0 ~ "2025-03-31",
+    febrero_2025>0 ~ "2025-02-28",
+    enero_2025>0 ~ "2025-01-31",
+    diciembre_2024>0 ~ "2024-12-31",
+    TRUE ~ NA
+  )) |> 
+   mutate(primer_registro_plan = as.Date(primer_registro_plan)) |> 
+  mutate(ultimo_registro_plan = as.Date(ultimo_registro_plan)) |> 
+  mutate(baja_plan = as.Date(baja_plan)) |> 
+   mutate(ultimo_registro_plan = case_when(
+    !is.na(baja_plan)~ baja_plan,
+    TRUE ~ ultimo_registro_plan
+  )) |> 
+  mutate(alta_plan = NA) |> 
+  mutate(fecha_nacimiento_beneficiario=as.Date(fecha_nacimiento_beneficiario)) |> 
+  #Remove beneficiaries that never received any money
+  filter(!is.na(primer_registro_plan)) |> 
+  select(dni_beneficiario, cuit_beneficiario, nombre_beneficiario,fecha_nacimiento_beneficiario, provincia_beneficiario,  alta_plan, baja_plan, primer_registro_plan, ultimo_registro_plan ) |> 
+  mutate_if(is.character,str_to_upper) |> 
+  mutate_if(is.character, replace_accented_vowels)|> 
+  mutate(programa ="VOLVER AL TRABAJO")->interim_beneficiaries_volver_al_trabajo_2025
+```
+
+```{r}
+bind_rows(interim_beneficiaries_volver_al_trabajo_2025, interim_beneficiaries_volver_al_trabajo_2024)->interim_beneficiaries_volver_al_trabajo_2024_2025
+
+interim_beneficiaries_volver_al_trabajo_2024_2025 |> 
+  arrange(primer_registro_plan) |> 
+  distinct(dni_beneficiario, .keep_all = TRUE) |> 
+    select(dni_beneficiario, primer_registro_plan)->auxiliar_primeros_registros
+
+interim_beneficiaries_volver_al_trabajo_2024_2025 |> 
+  arrange(desc(ultimo_registro_plan)) |> 
+  distinct(dni_beneficiario, .keep_all = TRUE) |> 
+  select(-primer_registro_plan) |> 
+  left_join(auxiliar_primeros_registros, by = "dni_beneficiario") |> 
+  relocate(primer_registro_plan, .before = ultimo_registro_plan)->processed_beneficiaries_volver_al_trabajo_2024_2025
+
+```
+
+#Save
+```{r}
+write_csv(processed_beneficiaries_volver_al_trabajo_2024_2025,"../../../data/processed/beneficiaries/processed_beneficiaries_volver_al_trabajo_2024_2025.csv")
+ drive_update(as_id("1NBHj2zNeg39T8I86iZzHcWNbtNIM9mgT"),"../../../data/processed/beneficiaries/processed_beneficiaries_volver_al_trabajo_2024_2025.csv")
+  file.remove("../../../data/processed/beneficiaries/processed_beneficiaries_volver_al_trabajo_2024_2025.csv")
+```
+
+

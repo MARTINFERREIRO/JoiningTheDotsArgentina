@@ -1,0 +1,147 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Packages required
+```{r}
+#Loading required packages
+library(lubridate)
+library(RSelenium)
+library(rvest)
+library(tidyverse)
+library(netstat)
+library(wdman)
+library(writexl)
+library(readxl)
+```
+
+
+#Auxiliary functions
+
+```{r}
+scrape_urls_avisos<-function(fecha_aviso, rubro, pausa = 10){
+  
+  prefix<-"https://www.boletinoficial.gob.ar"
+  
+  url<-"https://www.boletinoficial.gob.ar/busquedaAvanzada/segunda"
+  
+  rD <- rsDriver(browser = c("firefox"), #specify browser type you want Selenium to open
+               check = FALSE,
+               port = free_port(),
+               chromever = NULL,
+               geckover = "0.32.0",
+               verbose = FALSE, 
+               iedrver = NULL) 
+  
+  #Navigate to url
+  remDr <- rD$client
+  remDr$navigate(url)
+  Sys.sleep(5)
+  
+    #Fecha 1
+    fecha_desde_button<-remDr$findElement(using = "css selector", value =  "#fechaDesdeInput")
+   fecha_desde_button$sendKeysToElement(list(fecha_aviso))
+   
+   #Fecha 2
+   fecha_hasta_button<-remDr$findElement(using = "css selector", value =  "#fechaHastaInput")
+   fecha_hasta_button$sendKeysToElement(list(fecha_aviso))
+  
+
+   Sys.sleep(2)
+   
+  #Seleccionar rubro
+  rubros_button<-remDr$findElement(using = "css selector", value =  "#magicSuggestRubros input")
+   rubros_button$sendKeysToElement(list(rubro))
+   
+   
+   Sys.sleep(2)
+  
+   #Buscar 
+    fecha_hasta_button$clickElement()
+  buscar_button<-remDr$findElement(using = "css selector", value =  "#btnBusquedaAvanzada")
+   buscar_button$clickElement()
+  
+   Sys.sleep(pausa)
+   
+   #Extraer urls 
+   page_source <- remDr$getPageSource()[[1]]
+   page_html <- read_html(page_source)
+   urls_web <- page_html %>%
+  html_elements("a") %>%
+  html_attr("href") 
+   
+   #Keep only avisos urls
+   str_detect(urls_web,"detalleAviso") ->indeces_urls_of_interest
+   
+   if(length(indeces_urls_of_interest)<1){
+     output<-tibble(fecha=fecha_aviso,urls_avisos = NA,  tipo =rubro)
+   }else{
+        
+   indeces_urls_of_interest[is.na(indeces_urls_of_interest)]<-FALSE
+   urls_web[indeces_urls_of_interest]->suffix_urls_avisos
+   
+   tibble(fecha = fecha_aviso,prefix_urls_avisos= prefix, suffix_urls_avisos =suffix_urls_avisos, tipo =rubro  ) |> 
+     mutate(urls_avisos = paste0(prefix, suffix_urls_avisos)) |> 
+     select(fecha, tipo, urls_avisos)->output
+   }
+    rm(rD) # if necessary when rerunning
+    remDr$close()
+    gc()
+   
+   return(output)
+}
+```
+
+```{r}
+scrape_texto_avisos<-function(url_aviso){
+  
+  aviso_html<-read_html(url_aviso)
+  
+  aviso_html |> html_element(css = "h1") |> html_text()->empresa_aviso
+  
+  aviso_html |> html_elements(css = "p") |> html_text()->parrafos_html
+  
+  largo_textos<-vector()
+  for (i in 1:length(parrafos_html)) {
+    largo_textos[i]<-nchar(parrafos_html[[i]])
+  }
+  
+  texto_aviso<-parrafos_html[which.max(largo_textos)]
+  
+  tibble(empresa = empresa_aviso, url = url_aviso, aviso = texto_aviso) |> 
+    mutate(aviso = str_remove(aviso,"^table tr td \\{.+\\}"))->output
+  
+  return(output)
+  
+}
+```
+
+
+#Prueba
+```{r}
+  
+scrape_urls_avisos(fecha = "01/08/2025",rubro = "CONSTITUCION SA")->links_avisos_prueba
+  
+```
+
+
+```{r}
+listado_avisos<-list()
+```
+
+
+```{r}
+for (i in 1:nrow(links_avisos_prueba)) {
+  url_iteracion<-links_avisos_prueba$urls_avisos[i]
+  
+  scrape_texto_avisos(url_iteracion)->listado_avisos[[i]]
+  print(i)
+  
+}
+```
+
+```{r}
+bind_rows(listado_avisos)->avisos_df
+```
+

@@ -267,6 +267,23 @@ read_xlsx(file_content$local_path,sheet="Noviembre")->external_certificaciones_s
 read_xlsx(file_content$local_path,sheet = "Diciembre")->external_certificaciones_servicios_min_defensa_dic_2024
 file.remove( file_content$local_path)
 
+file_url<-"https://drive.google.com/uc?export=download&id=1iHImo6aZQ6dzvvksGcsTt0IjUU8VFv3C"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) %>% 
+  mutate (...5=as.character(...5)) %>% 
+rename(OBSERVACIONES="NOVEDADES DE BAJAS")->external_certificaciones_servicios_min_defensa_mar_2025
+read_xlsx(file_content$local_path, sheet = "Abril")%>% 
+  mutate (...5=as.character(...5)) %>% 
+rename(OBSERVACIONES="NOVEDADES DE BAJAS")->external_certificaciones_servicios_min_defensa_apr_2025
+read_xlsx(file_content$local_path,sheet="Mayo")%>%
+  mutate (...5=as.character(...5)) %>% 
+rename(OBSERVACIONES="NOVEDADES DE BAJAS")->external_certificaciones_servicios_min_defensa_may_2025
+read_xlsx(file_content$local_path,sheet = "Junio")%>% 
+  mutate (...5=as.character(...5)) %>% 
+rename(OBSERVACIONES="NOVEDADES DE BAJAS")->external_certificaciones_servicios_min_defensa_jun_2025
+file.remove( file_content$local_path)
+
+
 
 #Seguridad
 file_url<-"https://drive.google.com/uc?export=download&id=1HginABuQVHiuveqX-7T8o1eiWQ6Sj8q_"
@@ -1136,7 +1153,11 @@ nombres_columnas_certificaciones_defensa<-c("nombre_completo","cuit","escalafon"
 bind_rows(external_certificaciones_servicios_min_defensa_sept_2024 |> mutate(registro_cargo = "2024-09-30"),
           external_certificaciones_servicios_min_defensa_oct_2024|> mutate(registro_cargo = "2024-10-31"), 
           external_certificaciones_servicios_min_defensa_nov_2024|> mutate(registro_cargo = "2024-11-30"),
-          external_certificaciones_servicios_min_defensa_dic_2024|> mutate(registro_cargo = "2024-12-31")) ->auxiliar_certificaciones
+          external_certificaciones_servicios_min_defensa_dic_2024|> mutate(registro_cargo = "2024-12-31"),
+          external_certificaciones_servicios_min_defensa_mar_2025 |> mutate(registro_cargo = "2025-03-31"),
+          external_certificaciones_servicios_min_defensa_apr_2025|> mutate(registro_cargo = "2025-04-30"), 
+          external_certificaciones_servicios_min_defensa_may_2025|> mutate(registro_cargo = "2025-05-31"),
+          external_certificaciones_servicios_min_defensa_jun_2025|> mutate(registro_cargo = "2025-06-30")) ->auxiliar_certificaciones
 
 colnames(auxiliar_certificaciones)<-nombres_columnas_certificaciones_defensa
 auxiliar_certificaciones |> 
@@ -1193,10 +1214,9 @@ auxiliar_certificaciones |>
     mutate(baja_cargo=as.Date(baja_cargo,),
            ingreso_cargo=as.Date(ingreso_cargo),
            ultimo_registro_cargo = as.Date(ultimo_registro_cargo),
-           primer_registro_cargo=as.Date(ingreso_cargo))->interim_certificaciones_servicios_min_defensa_sept_dic_2024
+           primer_registro_cargo=as.Date(primer_registro_cargo))->interim_certificaciones_servicios_min_defensa_sept_dic_2024
   
 ```
-
 
 #Seguridad
 ```{r}

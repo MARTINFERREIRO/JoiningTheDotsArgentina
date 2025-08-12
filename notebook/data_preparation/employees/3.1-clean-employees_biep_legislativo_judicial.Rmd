@@ -72,6 +72,10 @@ file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
 read_xlsx(file_content$local_path, guess_max = 200)->external_certificaciones_servicios_min_exteriores_sept_dic_2024
 file.remove( file_content$local_path)
 
+file_url<-"https://drive.google.com/uc?export=download&id=1etuZbkC9cjQGky1AcT6Le6p2bb-Db7cr"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xls(file_content$local_path, guess_max = 200)->external_certificaciones_servicios_min_exteriores_apr_jun_2025
+file.remove( file_content$local_path)
 
 file_url<-"https://drive.google.com/uc?export=download&id=1i30b5IrquSRJ28qayy6V5G9kvMkcxgWr"
 file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
@@ -1019,11 +1023,12 @@ provisional_cancilleria|>
 provisional_cancilleria |> 
   distinct(dni, .keep_all = TRUE) |> 
   select(-primer_registro_cargo) |> 
-  left_join(primeros_registros_cancilleria) ->interim_empleados_locacion_min_exteriores_2022_2024
+  left_join(primeros_registros_cancilleria) ->interim_empleados_locacion_min_exteriores_2022_2025
 
 #Certificaciones de servicios
-external_certificaciones_servicios_min_exteriores_sept_dic_2024 |> 
-  select(-`Fecha Último Convenio`) |> 
+
+bind_rows(external_certificaciones_servicios_min_exteriores_sept_dic_2024, external_certificaciones_servicios_min_exteriores_apr_jun_2025) %>% 
+  select(-`Fecha Último Convenio`, -`FECHA ULTIMO CONVENIO`) |> 
   rename(periodo= PERIODO, dni = DNI, nombre_completo = `APELLIDO Y NOMBRE`, estructura = AREA, categoria_cargo=CONVENIO,
          cargo = CATEGORIA) |> 
   mutate(nombre = str_remove_all(nombre_completo,".+,"),
@@ -1049,7 +1054,15 @@ auxiliar_certificaciones_servicios_min_exteriores_sept_dic_2024 |>
     group_by(dni) |> slice_head(n=1) |> 
     ungroup() |> 
     inner_join(ultimos_registros_certificaciones_servicios_min_exteriores_sept_dic_2024, by ="dni") |> 
-    mutate(dni = as.character(dni))->interim_certificaciones_servicios_min_exteriores_sept_dic_2024
+    mutate(dni = as.character(dni)) %>% 
+    anti_join(interim_empleados_locacion_min_exteriores_2022_2025 %>% 
+                distinct(dni))->interim_certificaciones_servicios_min_exteriores_sept_2024_jun_2025
+```
+
+```{r}
+interim_certificaciones_servicios_min_exteriores_sept_dic_2024 %>% 
+  distinct(dni) %>% 
+  inner_join(interim_empleados_locacion_min_exteriores_2022_2024)
 ```
 
 
@@ -1585,9 +1598,8 @@ descartar|>
 ```
 
 ```{r}
-
 bind_rows( interim_empleados_apn_2023_2025,interim_empleados_locacion_defensa_2019_2023,interim_certificaciones_servicios_min_defensa_sept_dic_2024,
-           interim_empleados_ambiente_2024, interim_empleados_deporte_2024, interim_empleados_locacion_seguridad_2020_2024, interim_empleados_ministerio_interior, interim_empleados_locacion_min_capital_humano_2024, interim_empleados_locacion_min_exteriores_2022_2024, interim_certificaciones_servicios_min_exteriores_sept_dic_2024,interim_empleados_locacion_min_salud_2019_2024,interim_empleados_locacion_jefatura_2019_2024,interim_empleados_locacion_sec_presidencia_feb_2025,interim_empleados_min_justicia_2024,interim_certificaciones_servicios_sec_ambiente_turismo_deportes_min_interior_sep_dec_2024,interim_empleados_certificaciones_jefatura_2024) |> 
+           interim_empleados_ambiente_2024, interim_empleados_deporte_2024, interim_empleados_locacion_seguridad_2020_2024, interim_empleados_ministerio_interior, interim_empleados_locacion_min_capital_humano_2024, interim_empleados_locacion_min_exteriores_2022_2025, interim_certificaciones_servicios_min_exteriores_sept_2024_jun_2025,interim_empleados_locacion_min_salud_2019_2024,interim_empleados_locacion_jefatura_2019_2024,interim_empleados_locacion_sec_presidencia_feb_2025,interim_empleados_min_justicia_2024,interim_certificaciones_servicios_sec_ambiente_turismo_deportes_min_interior_sep_dec_2024,interim_empleados_certificaciones_jefatura_2024) |> 
   #OJO NO QUITAMOS DNIS REPETIDOOS PORQUE PUEDE TRATARSE DE PERSONAS DIFERENTES
   #distinct(dni, .keep_all=TRUE) |> 
   mutate_if(is.character,str_squish)|> 

@@ -11,6 +11,61 @@ library(googledrive)
 library(lubridate)
 ```
 
+```{r}
+file_url<-"https://drive.google.com/uc?export=download&id=1XZqqBdFef03egeAaf1JJfzJG8i-BvzQ7"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> select(DNI, NOMBRE) %>%
+mutate(PERIODO = 202411) %>% 
+  rename(DOCUMENTO=DNI,
+         APELLIDO_NOMBRE=NOMBRE)->external_beneficiaries_alimentar_noviembre_2024_1
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1EfRIduHPmpjX4vJw5b171-NLHzMmWAeg"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> select(DNI, NOMBRE) %>%
+mutate(PERIODO = 202411) %>% 
+  rename(DOCUMENTO=DNI,
+         APELLIDO_NOMBRE=NOMBRE)->external_beneficiaries_alimentar_noviembre_2024_2
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=18X4NyJLn6wR5dtUlVXuPRulElEaYKAqL"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> select(DNI, NOMBRE) %>%
+mutate(PERIODO = 202411) %>% 
+  rename(DOCUMENTO=DNI,
+         APELLIDO_NOMBRE=NOMBRE)->external_beneficiaries_alimentar_noviembre_2024_3
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1-3n9zDA9LS9hgg0FIq0cKUqAnajqYee0"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> select(DNI, NOMBRE) %>%
+mutate(PERIODO = 202412) %>% 
+  rename(DOCUMENTO=DNI,
+         APELLIDO_NOMBRE=NOMBRE)->external_beneficiaries_alimentar_diciembre_2024_1
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1UXS_8nDOr1XbG1xNxpmYNpUCY-1tJCv5"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> select(DNI, NOMBRE) %>%
+mutate(PERIODO = 202412) %>% 
+  rename(DOCUMENTO=DNI,
+         APELLIDO_NOMBRE=NOMBRE)->external_beneficiaries_alimentar_diciembre_2024_2
+file.remove( file_content$local_path)
+
+file_url<-"https://drive.google.com/uc?export=download&id=1NM2CieGXKfYppSfSRdNBMn8LDtZu54AO"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path) |> select(DNI, NOMBRE) %>%
+mutate(PERIODO = 202412) %>% 
+  rename(DOCUMENTO=DNI,
+         APELLIDO_NOMBRE=NOMBRE)->external_beneficiaries_alimentar_diciembre_2024_3
+file.remove( file_content$local_path)
+
+bind_rows(external_beneficiaries_alimentar_noviembre_2024_1, external_beneficiaries_alimentar_noviembre_2024_2, external_beneficiaries_alimentar_noviembre_2024_3)->external_beneficiaries_alimentar_noviembre_2024
+
+bind_rows(external_beneficiaries_alimentar_diciembre_2024_1, external_beneficiaries_alimentar_diciembre_2024_2, external_beneficiaries_alimentar_diciembre_2024_3)->external_beneficiaries_alimentar_diciembre_2024
+```
+
+
 #Load data
 ```{r}
 file_url<-"https://drive.google.com/uc?export=download&id=1aGFHBuCOBm-2NEL1bvXIZy4iYltx0T4z"
@@ -66,7 +121,7 @@ file.remove( file_content$local_path)
 
 #Clean
 ```{r}
-bind_rows(external_beneficiaries_alimentar_octubre_2024, external_beneficiaries_alimentar_septiembre_2024, external_beneficiaries_alimentar_agosto_2024,
+bind_rows(external_beneficiaries_alimentar_diciembre_2024, external_beneficiaries_alimentar_noviembre_2024, external_beneficiaries_alimentar_octubre_2024, external_beneficiaries_alimentar_septiembre_2024, external_beneficiaries_alimentar_agosto_2024,
           external_beneficiaries_alimentar_julio_2024, external_beneficiaries_alimentar_junio_2024, external_beneficiaries_alimentar_mayo_2024,
           external_beneficiaries_alimentar_abril_2024, external_beneficiaries_alimentar_marzo_2024, external_beneficiaries_alimentar_febrero_2024,
           external_beneficiaries_alimentar_enero_2024) |> 
@@ -94,8 +149,8 @@ auxiliar_2024 |>
 
 #Save
 ```{r}
-write.csv(interim_beneficiaries_alimentar_2024,"./interim_beneficiaries_alimentar_20245.csv")
+write.csv(interim_beneficiaries_alimentar_2024,"./interim_beneficiaries_alimentar_2024.csv")
 drive_update(as_id("1jKxj_n6jTIV7OP7EKgx4MOyOWXL7qSUK"),"./interim_beneficiaries_alimentar_2024.csv")
-file.remove("./interim_beneficiaries_alimentar_20245.csv")
+file.remove("./interim_beneficiaries_alimentar_2024.csv")
 ```
 

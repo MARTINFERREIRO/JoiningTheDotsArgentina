@@ -170,6 +170,31 @@ read_csv(file_content$local_path)->processed_empleados_ejecutivo
 file.remove( file_content$local_path)
 ```
 
+```{r}
+#EMPLEADOS (PLANTA Y CONTRATADOS) CAPITAL HUMANO
+
+file_url <- "https://drive.google.com/uc?export=download&id=1xgGkFKZlT1dUK2wzrH0mz5PTKfGBoX2f"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)-> external_empleados_capital_humano
+file.remove(file_content$local_path)
+
+file_url <- "https://drive.google.com/uc?export=download&id=1k6z7sPugzSDOGlz54ThknhjLdTzroy8v"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)-> external_empleados_secretaria_educacion_ch_agosto_2025
+file.remove(file_content$local_path)
+
+file_url <- "https://drive.google.com/uc?export=download&id=1QxOJzJEb3hOJgpgoX1DWkK4UOdTEPF9X"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)-> external_empleados_secretaria_ninez_ch_agosto_2025
+file.remove(file_content$local_path)
+
+file_url <- "https://drive.google.com/uc?export=download&id=1QZHxlPTWR5ZZ-xbdej9YsmyixjkW64SO"
+file_content <- drive_download(file = as_id(file_url), overwrite = TRUE)
+read_xlsx(file_content$local_path)-> external_empleados_secretaria_empleo_ch_agosto_2025
+file.remove(file_content$local_path)
+```
+
+
 #Functions
 ```{r}
 replace_accented_vowels <- function(input_string) {
@@ -1042,24 +1067,152 @@ bind_rows(processed_empleados_locacion__min_capital_humano_secretaria_educacion_
           processed_empleados_locacion_min_capital_humano_secretaria_trabajo_2024,
           processed_empleados_locacion_min_capital_humano_secretaria_familia_2024
           ) |> 
-  distinct(dni, .keep_all = TRUE)->processed_empleados_locacion_min_capital_humano_2024
+  distinct(dni, .keep_all = TRUE)->interim_empleados_locacion_min_capital_humano_2024
+```
+
+```{r}
+interim_empleados_capital_humano <- external_empleados_capital_humano %>%
+  transmute(
+    dni = as.character(DNI),
+    nombre_completo = paste(NOMBRE, APELLIDO),
+    apellido = APELLIDO,
+    nombre = NOMBRE,
+    fecha_nacimiento = NA,
+    cargo = NA_character_,
+    legajo = NA_character_,
+    categoria_cargo = `SIT. DE REVISTA`,
+    tipo_contratacion = "PERMANENTE O TRANSITORIA",
+    organismo = "MINISTERIO DE CAPITAL HUMANO",
+    estructura = NA_character_,
+    ingreso_cargo = as.Date(`FECHA DE INGRESO AL ORGANISMO`),
+    baja_cargo = as.Date(NA),
+    primer_registro_cargo = as.Date(`FECHA DE INGRESO AL ORGANISMO`),
+    ultimo_registro_cargo = as.Date("2025-08-01"),
+    tipo_administracion = "CENTRALIZADA",
+    poder = "EJECUTIVO",
+    fuente = "PDI"
+  )
+```
+
+```{r}
+interim_empleados_secretaria_educacion_ch_agosto_2025 <- external_empleados_secretaria_educacion_ch_agosto_2025 %>%
+  transmute(
+    dni = as.character(Doc),
+    nombre_completo = paste(
+      str_trim(str_split_fixed(Apellido_y_Nombre, ",", 2)[,2]),
+      str_trim(str_split_fixed(Apellido_y_Nombre, ",", 2)[,1])
+    ),
+    apellido = str_trim(str_split_fixed(Apellido_y_Nombre, ",", 2)[,1]),
+    nombre = str_trim(str_split_fixed(Apellido_y_Nombre, ",", 2)[,2]),
+    fecha_nacimiento = NA,   
+    cargo = NA_character_,
+    legajo = NA_character_,
+    categoria_cargo = Escalafon,
+    tipo_contratacion = case_when(
+      str_detect(str_to_upper(Tipo_Contratacion), "PLANTA PERMANENTE") ~ "PERMANENTE O TRANSITORIA",
+      str_detect(str_to_upper(Tipo_Contratacion), "CONTRATADO|LOCACIÓN") ~ "LOCACION",
+      TRUE ~ NA_character_
+    ),
+    organismo = "MINISTERIO DE CAPITAL HUMANO",
+    estructura = "SECRETARIA DE EDUCACION",
+    ingreso_cargo = as.Date(`Fecha de ingreso al Organismo`),
+    baja_cargo = as.Date(NA),
+    primer_registro_cargo = as.Date(`Fecha de ingreso al Organismo`),
+    ultimo_registro_cargo = as.Date("2025-08-01"),
+    tipo_administracion = "CENTRALIZADA",
+    poder = "EJECUTIVO",
+    fuente = "PDI"
+  )
+```
+
+```{r}
+interim_empleados_secretaria_ninez_ch_agosto_2025 <- external_empleados_secretaria_ninez_ch_agosto_2025 %>%
+  transmute(
+    dni = as.character(DNI),
+    nombre_completo = paste(
+      str_to_upper(stri_trans_general(NOMBRE, "Latin-ASCII")),
+      APELLIDO
+    ),
+    apellido = APELLIDO,
+    nombre = str_to_upper(stri_trans_general(NOMBRE, "Latin-ASCII")),
+    fecha_nacimiento = NA,   # lógico (lgl)
+    cargo = NA_character_,
+    legajo = NA_character_,
+    categoria_cargo = NA_character_,
+    tipo_contratacion = case_when(
+      str_to_upper(stri_trans_general(PLANTA, "Latin-ASCII")) %in% 
+        c("PERMANENTE", "PERM FE (ASIGN FUNC)", "PERM FE (TRANSIT)", "TRANSITORIA PROSOL", "TRANSITORIA")
+        ~ "PERMANENTE O TRANSITORIA",
+      str_to_upper(stri_trans_general(PLANTA, "Latin-ASCII")) %in%
+        c("CONTRATADA", "GAB NIVEL POLITICO", "GAB AUDITORIA", "1109/17")
+        ~ "LOCACION",
+      TRUE ~ NA_character_
+    ),
+    organismo = "MINISTERIO DE CAPITAL HUMANO",
+    estructura = "SECRETARIA DE NINEZ ADOLECENCIA Y FAMILIA",
+    ingreso_cargo = ymd(str_replace(as.character(`FECHA DE INGRESO`), "\\s.*$", "")),
+    baja_cargo = as.Date(NA),
+    primer_registro_cargo = ymd(str_replace(as.character(`FECHA DE INGRESO`), "\\s.*$", "")),
+    ultimo_registro_cargo = as.Date("2025-08-01"),
+    tipo_administracion = "CENTRALIZADA",
+    poder = "EJECUTIVO",
+    fuente = "PDI"
+  )
+```
+
+```{r}
+interim_empleados_secretaria_empleo_ch_agosto_2025 <- external_empleados_secretaria_empleo_ch_agosto_2025 %>%
+  transmute(
+    dni = as.character(DNI),
+    nombre_completo = paste(
+      str_trim(str_split_fixed(`APELLIDO Y NOMBRE`, ",", 2)[,2]),
+      str_trim(str_split_fixed(`APELLIDO Y NOMBRE`, ",", 2)[,1])
+    ),
+    apellido = str_trim(str_split_fixed(`APELLIDO Y NOMBRE`, ",", 2)[,1]),
+    nombre = str_trim(str_split_fixed(`APELLIDO Y NOMBRE`, ",", 2)[,2]),
+    fecha_nacimiento = NA,   # lógico (lgl)
+    cargo = `SIT. DE REVISTA`,
+    legajo = Nivel,
+    categoria_cargo = Grado,
+    tipo_contratacion = case_when(
+      `SIT. DE REVISTA` == "AD HONOREM" ~ "AD HONOREM",
+      TRUE ~ "LOCACION"
+    ),
+    organismo = "MINISTERIO DE CAPITAL HUMANO",
+    estructura = "SECRETARIA DE TRABAJO EMPLEO Y SEGURIDAD SOCIAL",
+    ingreso_cargo = as.Date(`Fecha de Alta de Modalidad Actual`),
+    baja_cargo = as.Date(NA),
+    primer_registro_cargo = as.Date(`Fecha de Alta de Modalidad Actual`),
+    ultimo_registro_cargo = as.Date("2025-08-01"),
+    tipo_administracion = "CENTRALIZADA",
+    poder = "EJECUTIVO",
+    fuente = "PDI"
+  )
+```
+
+```{r}
+interim_empleados_ch_agosto_25 <- bind_rows(interim_empleados_capital_humano, interim_empleados_secretaria_educacion_ch_agosto_2025, interim_empleados_secretaria_ninez_ch_agosto_2025, interim_empleados_secretaria_empleo_ch_agosto_2025)
+```
+
+```{r}
+bind_rows(interim_empleados_ch_agosto_25, interim_empleados_locacion_min_capital_humano_2024) %>% 
+distinct(dni,.keep_all = TRUE)-> interim_empleados_contratados_capital_humano
 ```
 
 #Save
 
 ```{r}
-write_csv(processed_empleados_locacion_min_capital_humano_2024,"../../../data/interim/staff/interim_empleados_locacion_min_capital_humano_2024.csv")
-drive_update(as_id("1d9ahH-uOomyX3akARfcF0o23oR-Jw-59"),"../../../data/interim/staff/interim_empleados_locacion_min_capital_humano_2024.csv")
-file.remove("../../../data/interim/staff/interim_empleados_locacion_min_capital_humano_2024.csv")
+write_csv(interim_empleados_contratados_capital_humano,"./interim_empleados_contratados_capital_humano.csv")
+drive_update(as_id("1d9ahH-uOomyX3akARfcF0o23oR-Jw-59"),"./interim_empleados_contratados_capital_humano.csv")
+file.remove("./interim_empleados_contratados_capital_humano.csv")
 
-write_csv(processed_empleados_locacion_jefatura_2019_2024,"../../../data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
-drive_update(as_id("1ReNNYlFkrCHkMgzarWmLJmh5vD-Fa8Ck"),"../../../data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
-file.remove("../../../data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
+write_csv(processed_empleados_locacion_jefatura_2019_2024,"./data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
+drive_update(as_id("1ReNNYlFkrCHkMgzarWmLJmh5vD-Fa8Ck"),"./data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
+file.remove("./data/interim/staff/interim_empleados_locacion_jefatura_2019_2024.csv")
 
-write_csv(processed_empleados_certificaciones_jefatura_2024,"../../../data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
-drive_update(as_id("1VIATAXIijRGlpgStc5gJmK9D20Wzt-dc"),"../../../data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
-file.remove("../../../data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
-
+write_csv(processed_empleados_certificaciones_jefatura_2024,"./data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
+drive_update(as_id("1VIATAXIijRGlpgStc5gJmK9D20Wzt-dc"),"./data/interim/staff/interim_empleados_certificaciones_jefatura_2024.csv")
+file.remove("./interim_empleados_certificaciones_jefatura_2024.csv")
 ```
 
 
